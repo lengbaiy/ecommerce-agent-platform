@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { CChart } from "@coreui/vue-chartjs";
 
 import { useOperationsWorkspace } from "./composables/useOperationsWorkspace";
 import { navigationItems } from "./config/navigation";
@@ -7,6 +8,7 @@ import ModuleWorkspace from "./modules/ModuleWorkspace.vue";
 
 const activeModuleId = ref("dashboard");
 const selectedShopId = ref("amazon-us-demo");
+const sidebarVisible = ref(true);
 const currentModule = computed(
   () => navigationItems.find((item) => item.id === activeModuleId.value) ?? navigationItems[0],
 );
@@ -30,670 +32,587 @@ const statusLabels: Record<string, string> = {
   PLANNING: "规划中",
   RUNNING: "运行中",
   WAITING_APPROVAL: "待审批",
+  RETRYING: "重试中",
   COMPLETED: "已完成",
   DEGRADED: "降级完成",
   FAILED: "失败",
   CANCELLED: "已取消",
 };
 
+const intentLabels: Record<string, string> = {
+  market_entry: "市场机会",
+  product_strategy: "商品策略",
+  listing_generation: "Listing",
+  operations_diagnosis: "经营诊断",
+};
+
+const navIcons: Record<string, string> = {
+  dashboard: "cil-speedometer",
+  tasks: "cil-task",
+  market: "cil-globe-alt",
+  strategy: "cil-lightbulb",
+  listing: "cil-notes",
+  diagnosis: "cil-chart-pie",
+  knowledge: "cil-layers",
+  evaluation: "cil-check-circle",
+};
+
+const salesChartData = {
+  labels: ["8月5日", "8月6日", "8月7日", "8月8日", "8月9日", "8月10日", "今天"],
+  datasets: [
+    {
+      label: "GMV",
+      backgroundColor: "rgba(50, 31, 219, 0.08)",
+      borderColor: "#321fdb",
+      pointBackgroundColor: "#fff",
+      pointBorderColor: "#321fdb",
+      data: [82, 94, 91, 108, 116, 121, 129],
+      fill: true,
+      tension: 0.35,
+    },
+    {
+      label: "目标",
+      borderColor: "#9da5b1",
+      borderDash: [6, 5],
+      pointRadius: 0,
+      data: [90, 95, 100, 105, 110, 118, 125],
+      tension: 0.2,
+    },
+  ],
+};
+
+const salesChartOptions = {
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { display: false }, ticks: { color: "#768192" } },
+    y: {
+      beginAtZero: true,
+      grid: { color: "rgba(0,0,0,.06)" },
+      ticks: { color: "#768192", callback: (value: string | number) => `¥${value}k` },
+    },
+  },
+};
+
+const widgetData = [
+  [65, 59, 84, 81, 90, 102, 118],
+  [1200, 1420, 1350, 1600, 1710, 1680, 1864],
+  [4.2, 4.0, 4.1, 3.9, 3.8, 3.7, 3.86],
+  [18, 16, 17, 15, 14, 13, 12],
+];
+
+const widgetColors = ["primary", "info", "warning", "danger"];
+
+function widgetChartData(index: number) {
+  return {
+    labels: ["一", "二", "三", "四", "五", "六", "日"],
+    datasets: [
+      {
+        backgroundColor: "transparent",
+        borderColor: "rgba(255,255,255,.75)",
+        pointBackgroundColor: "rgba(255,255,255,.9)",
+        data: widgetData[index],
+        tension: 0.4,
+      },
+    ],
+  };
+}
+
+const widgetChartOptions = {
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: { x: { display: false }, y: { display: false } },
+  elements: { line: { borderWidth: 2 }, point: { radius: 0, hoverRadius: 4 } },
+};
+
+const channelRows = [
+  {
+    name: "Amazon US",
+    gmv: "¥82,460",
+    share: 64,
+    orders: 1198,
+    conversion: "4.12%",
+    color: "primary",
+  },
+  {
+    name: "Shopify",
+    gmv: "¥28,960",
+    share: 23,
+    orders: 426,
+    conversion: "3.48%",
+    color: "success",
+  },
+  {
+    name: "TikTok Shop",
+    gmv: "¥17,220",
+    share: 13,
+    orders: 240,
+    conversion: "2.91%",
+    color: "warning",
+  },
+];
+
+const insightRows = [
+  {
+    level: "机会",
+    color: "success",
+    title: "便携咖啡机市场进入窗口扩大",
+    detail: "US 站搜索热度上涨，头部集中度下降 4.2%。",
+  },
+  {
+    level: "优化",
+    color: "warning",
+    title: "核心 SKU Listing 可优化",
+    detail: "流量稳定但转化下降，建议复核首屏卖点。",
+  },
+  {
+    level: "风险",
+    color: "danger",
+    title: "补货节点需要提前",
+    detail: "当前可售库存覆盖 12 天，低于补货周期。",
+  },
+];
+
 function statusLabel(value: string) {
   return statusLabels[value] ?? value;
+}
+
+function intentLabel(value: string) {
+  return intentLabels[value] ?? value;
+}
+
+function statusColor(value: string) {
+  if (value === "COMPLETED") return "success";
+  if (value === "WAITING_APPROVAL") return "warning";
+  if (value === "FAILED" || value === "CANCELLED") return "danger";
+  return "info";
 }
 </script>
 
 <template>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">A</span><span>Commerce Agent</span></div>
-      <label class="shop-switcher">
-        <span class="shop-icon">店</span>
-        <span><b>Amazon US 演示店</b><small>授权数据环境 · Dev</small></span>
-        <select v-model="selectedShopId" aria-label="选择店铺">
-          <option value="amazon-us-demo">Amazon US 演示店</option>
-          <option value="shopify-demo">Shopify 演示店</option>
-        </select>
-      </label>
-      <nav>
+  <CSidebar
+    class="border-end commerce-sidebar"
+    color-scheme="dark"
+    position="fixed"
+    :visible="sidebarVisible"
+    @visible-change="(value: boolean) => (sidebarVisible = value)"
+  >
+    <CSidebarHeader class="border-bottom">
+      <CSidebarBrand>
+        <span class="brand-mark">EC</span>
+        <span class="sidebar-brand-full ms-2">
+          <strong>电商智能运营</strong><small>Agent Platform</small>
+        </span>
+      </CSidebarBrand>
+      <CCloseButton class="d-lg-none" dark @click="sidebarVisible = false" />
+    </CSidebarHeader>
+
+    <div class="px-3 pt-3">
+      <CFormSelect v-model="selectedShopId" size="sm" aria-label="选择店铺">
+        <option value="amazon-us-demo">Amazon US 演示店</option>
+        <option value="shopify-demo">Shopify 演示店</option>
+      </CFormSelect>
+    </div>
+
+    <CSidebarNav>
+      <CNavTitle>运营控制台</CNavTitle>
+      <CNavItem
+        v-for="item in navigationItems.filter((nav) => nav.group === 'overview')"
+        :key="item.id"
+      >
         <button
-          v-for="item in navigationItems"
-          :key="item.id"
-          class="nav-item"
+          class="nav-link"
           :class="{ active: activeModuleId === item.id }"
           @click="activeModuleId = item.id"
         >
-          <span class="nav-dot"></span>{{ item.label }}
+          <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
+          <CBadge v-if="item.id === 'tasks' && pendingTasks.length" color="warning" class="ms-auto">
+            {{ pendingTasks.length }}
+          </CBadge>
         </button>
-      </nav>
-      <div class="sidebar-note">
-        <span>治理基线</span>
-        <b>Evidence First</b>
-        <small>关键结论可追溯，写操作需审批</small>
-      </div>
-    </aside>
-
-    <main class="workspace">
-      <header class="topbar">
-        <span
-          >电商智能运营 / <b>{{ currentModule.label }}</b></span
+      </CNavItem>
+      <CNavTitle>业务 Agent</CNavTitle>
+      <CNavItem
+        v-for="item in navigationItems.filter((nav) => nav.group === 'agent')"
+        :key="item.id"
+      >
+        <button
+          class="nav-link"
+          :class="{ active: activeModuleId === item.id }"
+          @click="activeModuleId = item.id"
         >
-        <div><span class="environment">DEV</span><span class="user">运营负责人</span></div>
-      </header>
+          <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
+        </button>
+      </CNavItem>
+      <CNavTitle>平台治理</CNavTitle>
+      <CNavItem
+        v-for="item in navigationItems.filter((nav) => nav.group === 'system')"
+        :key="item.id"
+      >
+        <button
+          class="nav-link"
+          :class="{ active: activeModuleId === item.id }"
+          @click="activeModuleId = item.id"
+        >
+          <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
+        </button>
+      </CNavItem>
+    </CSidebarNav>
 
-      <section class="content">
-        <div v-if="isDashboard" class="page-heading">
-          <div>
-            <p class="eyebrow">OPERATIONS CONTROL CENTER</p>
-            <h1>经营总览</h1>
-            <p>数据截止 {{ dataCutoff }} · 事实、推断与建议分层展示</p>
-          </div>
-          <div class="heading-actions">
-            <button class="secondary" :disabled="loading" @click="loadWorkspace(selectedShopId)">
-              {{ loading ? "加载中…" : "刷新数据" }}
-            </button>
-            <button class="primary" :disabled="creating" @click="createTask(selectedShopId)">
-              {{ creating ? "创建中…" : "+ 市场进入评估" }}
-            </button>
-          </div>
+    <CSidebarFooter class="border-top px-3 py-3">
+      <div class="d-flex align-items-center gap-2 small">
+        <CAvatar color="light" text-color="primary" size="sm">OP</CAvatar>
+        <div class="sidebar-brand-full">
+          <div class="fw-semibold">运营负责人</div>
+          <small class="text-secondary">系统管理员</small>
         </div>
+      </div>
+    </CSidebarFooter>
+  </CSidebar>
 
-        <div v-if="errorMessage" class="error-state">
-          {{ errorMessage }}<button @click="loadWorkspace(selectedShopId)">重新加载</button>
-        </div>
+  <div class="wrapper d-flex flex-column min-vh-100">
+    <CHeader position="sticky" class="mb-4 p-0 border-bottom">
+      <CContainer class="px-4" fluid>
+        <CHeaderToggler class="ps-1" @click="sidebarVisible = !sidebarVisible">
+          <CIcon icon="cil-menu" size="lg" />
+        </CHeaderToggler>
+        <CBreadcrumb class="mb-0 ms-3 d-none d-md-flex">
+          <CBreadcrumbItem>运营工作台</CBreadcrumbItem
+          ><CBreadcrumbItem active>{{ currentModule.label }}</CBreadcrumbItem>
+        </CBreadcrumb>
+        <CHeaderNav class="ms-auto align-items-center gap-2">
+          <CInputGroup size="sm" class="header-search d-none d-md-flex">
+            <CInputGroupText><CIcon icon="cil-magnifying-glass" /></CInputGroupText
+            ><CFormInput placeholder="搜索任务、SKU 或报告" />
+          </CInputGroup>
+          <CNavItem>
+            <CNavLink href="#"><CIcon icon="cil-bell" size="lg" /></CNavLink>
+          </CNavItem>
+          <CDropdown placement="bottom-end" variant="nav-item">
+            <CDropdownToggle :caret="false">
+              <CAvatar color="primary" text-color="white" size="sm">OP</CAvatar>
+            </CDropdownToggle>
+            <CDropdownMenu>
+              <CDropdownHeader>运营负责人</CDropdownHeader
+              ><CDropdownItem href="#">个人设置</CDropdownItem
+              ><CDropdownItem href="#">退出登录</CDropdownItem>
+            </CDropdownMenu>
+          </CDropdown>
+        </CHeaderNav>
+      </CContainer>
+    </CHeader>
 
-        <template v-if="isDashboard && !errorMessage">
-          <section class="metric-grid" :class="{ muted: loading }">
-            <article v-for="metric in overview?.metrics" :key="metric.code" class="metric-card">
-              <span>{{ metric.label }}</span>
-              <strong>{{ metric.display_value }}</strong>
-              <small :class="metric.trend">{{ metric.change_display }}</small>
-            </article>
-          </section>
+    <div class="body flex-grow-1">
+      <CContainer class="px-4" lg>
+        <template v-if="isDashboard">
+          <CRow class="align-items-center mb-4">
+            <CCol :md="7">
+              <div class="text-body-secondary small mb-1">数据截止 {{ dataCutoff }}</div>
+              <h2 class="mb-1">经营总览</h2>
+              <div class="text-body-secondary">Amazon US 演示店 · 今日经营与 Agent 任务概况</div>
+            </CCol>
+            <CCol :md="5" class="text-md-end mt-3 mt-md-0">
+              <CButton
+                color="secondary"
+                variant="outline"
+                class="me-2"
+                :disabled="loading"
+                @click="loadWorkspace(selectedShopId)"
+              >
+                同步数据 </CButton
+              ><CButton color="primary" :disabled="creating" @click="createTask(selectedShopId)">
+                <CIcon icon="cil-lightbulb" class="me-2" />{{
+                  creating ? "创建中…" : "市场进入评估"
+                }}
+              </CButton>
+            </CCol>
+          </CRow>
 
-          <section class="dashboard-grid">
-            <article class="panel task-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Agent 任务</h2>
-                  <p>统一状态、证据、审批与 Trace</p>
-                </div>
-                <button class="link-button" @click="activeModuleId = 'tasks'">任务中心 →</button>
-              </div>
-              <div class="table-head"><span>任务</span><span>类型</span><span>状态</span></div>
-              <div v-if="!tasks.length" class="empty">暂无任务，可发起市场进入评估。</div>
-              <div v-for="task in tasks.slice(0, 5)" :key="task.id" class="task-row">
-                <span
-                  ><b>{{ task.request.user_query }}</b
-                  ><small>{{ task.id.slice(0, 8) }} · {{ task.request.user_id }}</small></span
-                >
-                <span>{{ task.request.intent }}</span>
-                <span class="status" :class="task.status.toLowerCase()">{{
-                  statusLabel(task.status)
-                }}</span>
-              </div>
-            </article>
+          <CAlert v-if="errorMessage" color="danger" dismissible>{{ errorMessage }}</CAlert>
 
-            <article class="panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>待审批</h2>
-                  <p>高风险写操作人工把关</p>
-                </div>
-                <span class="count">{{ pendingTasks.length }}</span>
-              </div>
-              <div v-if="!pendingTasks.length" class="empty approval-empty">当前没有待审批事项</div>
-              <div v-for="task in pendingTasks.slice(0, 4)" :key="task.id" class="approval-item">
-                <span class="approval-icon">✓</span>
-                <div>
-                  <b>{{ task.request.user_query }}</b
-                  ><small>审批快照将在通过时锁定</small>
-                </div>
-              </div>
-            </article>
-          </section>
+          <CRow :xs="{ gutter: 4 }" class="mb-4">
+            <CCol v-for="(metric, index) in overview?.metrics" :key="metric.code" :sm="6" :xl="3">
+              <CWidgetStatsA :color="widgetColors[index]">
+                <template #value>
+                  {{ metric.display_value }}
+                  <span class="fs-6 fw-normal"
+                    >({{ metric.change_display }}
+                    <CIcon
+                      :icon="metric.trend === 'down' ? 'cil-arrow-bottom' : 'cil-arrow-top'"
+                    />)</span
+                  >
+                </template>
+                <template #title>{{ metric.label }}</template>
+                <template #action>
+                  <CDropdown placement="bottom-end">
+                    <CDropdownToggle color="transparent" class="p-0 text-white" :caret="false">
+                      <CIcon icon="cil-options" class="text-white" /> </CDropdownToggle
+                    ><CDropdownMenu>
+                      <CDropdownItem href="#">查看明细</CDropdownItem
+                      ><CDropdownItem href="#">创建诊断任务</CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </template>
+                <template #chart>
+                  <CChart
+                    type="line"
+                    class="mt-3 mx-3"
+                    style="height: 70px"
+                    :data="widgetChartData(index)"
+                    :options="widgetChartOptions"
+                  />
+                </template>
+              </CWidgetStatsA>
+            </CCol>
+          </CRow>
 
-          <section class="dashboard-grid lower-grid">
-            <article class="panel evidence-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>核心 Agent 编排</h2>
-                  <p>一期保持最小责任边界</p>
-                </div>
-              </div>
-              <div class="flow">
-                <span>Supervisor</span><i>→</i><span>4 个业务 Agent</span><i>→</i><span>Judge</span
-                ><i>→</i><span>完成 / 审批</span>
-              </div>
-              <div class="legend">
-                <b>A</b>业务事实 <b>B</b>检索证据 <b>C</b>模型推断 <b>D</b>缺失/未知
-              </div>
-            </article>
-            <article class="panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>经营预警</h2>
-                  <p>事实与建议分开呈现</p>
-                </div>
-              </div>
-              <div v-for="alert in overview?.alerts" :key="alert.title" class="alert-item">
-                <i :class="alert.severity"></i>
-                <div>
-                  <b>{{ alert.title }}</b>
-                  <p>{{ alert.description }}</p>
-                  <small>{{ alert.module }}</small>
-                </div>
-              </div>
-            </article>
-          </section>
+          <CRow>
+            <CCol :lg="8">
+              <CCard class="mb-4">
+                <CCardBody>
+                  <CRow>
+                    <CCol :sm="5">
+                      <h4 class="card-title mb-0">销售趋势</h4>
+                      <div class="small text-body-secondary">过去 7 天 · 全渠道 GMV</div> </CCol
+                    ><CCol :sm="7" class="d-none d-md-block">
+                      <CButton color="primary" class="float-end">
+                        <CIcon icon="cil-cloud-download" /> </CButton
+                      ><CButtonGroup class="float-end me-3">
+                        <CButton color="secondary" variant="outline">日</CButton
+                        ><CButton color="secondary" variant="outline" active>周</CButton
+                        ><CButton color="secondary" variant="outline">月</CButton>
+                      </CButtonGroup>
+                    </CCol>
+                  </CRow>
+                  <CChart
+                    type="line"
+                    style="height: 300px; margin-top: 32px"
+                    :data="salesChartData"
+                    :options="salesChartOptions"
+                  />
+                </CCardBody>
+                <CCardFooter>
+                  <CRow :xs="{ cols: 2, gutter: 4 }" :lg="{ cols: 4 }" class="text-center">
+                    <CCol>
+                      <div class="text-body-secondary small">GMV</div>
+                      <div class="fw-semibold">¥764,820</div>
+                      <CProgress class="mt-2" color="primary" thin :value="87" /> </CCol
+                    ><CCol>
+                      <div class="text-body-secondary small">订单量</div>
+                      <div class="fw-semibold">11,284</div>
+                      <CProgress class="mt-2" color="info" thin :value="76" /> </CCol
+                    ><CCol>
+                      <div class="text-body-secondary small">客单价</div>
+                      <div class="fw-semibold">¥67.78</div>
+                      <CProgress class="mt-2" color="warning" thin :value="63" /> </CCol
+                    ><CCol>
+                      <div class="text-body-secondary small">退款率</div>
+                      <div class="fw-semibold">1.24%</div>
+                      <CProgress class="mt-2" color="danger" thin :value="18" />
+                    </CCol>
+                  </CRow>
+                </CCardFooter>
+              </CCard>
+            </CCol>
+            <CCol :lg="4">
+              <CCard class="mb-4">
+                <CCardHeader class="d-flex justify-content-between align-items-center">
+                  <span>机会与风险</span><CBadge color="primary">Agent 洞察</CBadge>
+                </CCardHeader>
+                <CListGroup flush>
+                  <CListGroupItem v-for="item in insightRows" :key="item.title" class="py-3">
+                    <div class="d-flex align-items-start gap-3">
+                      <CBadge :color="item.color" shape="rounded-pill">{{ item.level }}</CBadge>
+                      <div>
+                        <div class="fw-semibold small">{{ item.title }}</div>
+                        <div class="small text-body-secondary mt-1">{{ item.detail }}</div>
+                      </div>
+                    </div>
+                  </CListGroupItem>
+                </CListGroup>
+                <CCardFooter>
+                  <CButton
+                    color="primary"
+                    variant="ghost"
+                    size="sm"
+                    class="w-100"
+                    @click="activeModuleId = 'diagnosis'"
+                  >
+                    查看经营诊断
+                  </CButton>
+                </CCardFooter>
+              </CCard>
+            </CCol>
+          </CRow>
+
+          <CRow>
+            <CCol :lg="8">
+              <CCard class="mb-4">
+                <CCardHeader class="d-flex justify-content-between align-items-center">
+                  <span>Agent 任务</span
+                  ><CButton
+                    color="primary"
+                    variant="ghost"
+                    size="sm"
+                    @click="activeModuleId = 'tasks'"
+                  >
+                    查看全部
+                  </CButton>
+                </CCardHeader>
+                <CCardBody class="p-0">
+                  <CTable align="middle" class="mb-0" hover responsive>
+                    <CTableHead class="text-nowrap">
+                      <CTableRow>
+                        <CTableHeaderCell class="bg-body-secondary">任务</CTableHeaderCell
+                        ><CTableHeaderCell class="bg-body-secondary">工作流</CTableHeaderCell
+                        ><CTableHeaderCell class="bg-body-secondary">负责人</CTableHeaderCell
+                        ><CTableHeaderCell class="bg-body-secondary"> 状态 </CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      <CTableRow v-if="!tasks.length">
+                        <CTableDataCell colspan="4" class="text-center py-5 text-body-secondary">
+                          暂无任务，可从“市场进入评估”开始。
+                        </CTableDataCell>
+                      </CTableRow>
+                      <CTableRow v-for="task in tasks.slice(0, 5)" :key="task.id">
+                        <CTableDataCell>
+                          <div class="fw-semibold text-truncate task-name">
+                            {{ task.request.user_query }}
+                          </div>
+                          <div class="small text-body-secondary">
+                            #{{ task.id.slice(0, 8) }} · {{ task.created_at.slice(0, 10) }}
+                          </div> </CTableDataCell
+                        ><CTableDataCell>
+                          <CBadge color="secondary">
+                            {{ intentLabel(task.request.intent) }}
+                          </CBadge> </CTableDataCell
+                        ><CTableDataCell>
+                          <div class="d-flex align-items-center gap-2">
+                            <CAvatar color="light" size="sm">
+                              {{ task.request.user_id.slice(0, 2).toUpperCase() }} </CAvatar
+                            ><span class="small">{{ task.request.user_id }}</span>
+                          </div> </CTableDataCell
+                        ><CTableDataCell>
+                          <CBadge :color="statusColor(task.status)">
+                            {{ statusLabel(task.status) }}
+                          </CBadge>
+                        </CTableDataCell>
+                      </CTableRow>
+                    </CTableBody>
+                  </CTable>
+                </CCardBody>
+              </CCard>
+            </CCol>
+            <CCol :lg="4">
+              <CCard class="mb-4">
+                <CCardHeader>渠道贡献</CCardHeader
+                ><CCardBody>
+                  <div
+                    v-for="channel in channelRows"
+                    :key="channel.name"
+                    class="progress-group mb-4"
+                  >
+                    <div class="progress-group-header">
+                      <span class="title fw-semibold">{{ channel.name }}</span
+                      ><span class="ms-auto fw-semibold">{{ channel.gmv }}</span>
+                    </div>
+                    <div class="small text-body-secondary mb-2">
+                      {{ channel.orders }} 单 · 转化 {{ channel.conversion }}
+                    </div>
+                    <CProgress thin :color="channel.color" :value="channel.share" />
+                  </div>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          </CRow>
         </template>
 
-        <ModuleWorkspace v-else-if="!isDashboard" :module="currentModule" />
-      </section>
-    </main>
+        <ModuleWorkspace v-else :module="currentModule" />
+      </CContainer>
+    </div>
+
+    <CFooter class="px-4">
+      <div>
+        <a href="https://coreui.io" target="_blank" rel="noreferrer">CoreUI</a
+        ><span class="ms-1">adapted for 电商智能运营 Agent 平台</span>
+      </div>
+      <div class="ms-auto"><span class="me-1">版本</span><strong>0.1.0</strong></div>
+    </CFooter>
   </div>
 </template>
 
 <style scoped>
-:global(*) {
-  box-sizing: border-box;
-}
 :global(body) {
-  margin: 0;
-  min-width: 0;
-  color: #172033;
-  background: #f7f7fb;
-  font-family: Inter, "Microsoft YaHei", sans-serif;
+  background-color: var(--cui-tertiary-bg);
 }
-button {
-  font: inherit;
-  cursor: pointer;
+.wrapper {
+  width: 100%;
+  padding-inline-start: var(--cui-sidebar-occupy-start, 0);
+  transition: padding 0.15s;
 }
-.shell {
-  display: flex;
-  min-height: 100vh;
+.commerce-sidebar {
+  --cui-sidebar-bg: #212631;
+  --cui-sidebar-brand-bg: #1b1f27;
 }
-.sidebar {
-  display: flex;
-  width: 244px;
-  min-height: 100vh;
-  flex-direction: column;
-  padding: 24px 14px 18px;
-  color: #cbd5e1;
-  background: linear-gradient(180deg, #17122a, #251744);
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 0 11px 25px;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
+.sidebar-header {
+  min-height: 4rem;
 }
 .brand-mark {
   display: grid;
-  width: 31px;
-  height: 31px;
+  width: 34px;
+  height: 34px;
   color: #fff;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
-  border-radius: 9px;
-  place-items: center;
-}
-.shop-switcher {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  color: #fff;
-  background: #ffffff0d;
-  border: 1px solid #ffffff17;
-  border-radius: 10px;
-}
-.shop-switcher span:nth-child(2) {
-  flex: 1;
-}
-.shop-switcher b,
-.shop-switcher small {
-  display: block;
-}
-.shop-switcher b {
-  font-size: 12px;
-}
-.shop-switcher small {
-  margin-top: 4px;
-  color: #9ca3af;
-  font-size: 10px;
-}
-.shop-switcher select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-.shop-icon {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  background: #8b5cf633;
+  background: var(--cui-primary);
   border-radius: 7px;
   place-items: center;
   font-size: 11px;
-}
-nav {
-  margin-top: 22px;
-}
-.nav-item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  color: #b8b5c9;
-  background: transparent;
-  border: 0;
-  border-radius: 8px;
-  text-align: left;
-  font-size: 13px;
-}
-.nav-item:hover,
-.nav-item.active {
-  color: #fff;
-  background: #ffffff12;
-}
-.nav-item.active {
-  box-shadow: inset 3px 0 #a78bfa;
-}
-.nav-dot {
-  width: 6px;
-  height: 6px;
-  background: #6b7280;
-  border-radius: 50%;
-}
-.nav-item.active .nav-dot {
-  background: #c4b5fd;
-  box-shadow: 0 0 10px #a78bfa;
-}
-.sidebar-note {
-  margin-top: auto;
-  padding: 15px 12px;
-  border-top: 1px solid #ffffff14;
-}
-.sidebar-note span,
-.sidebar-note b,
-.sidebar-note small {
-  display: block;
-}
-.sidebar-note span {
-  color: #a78bfa;
-  font-size: 10px;
-  letter-spacing: 1px;
-}
-.sidebar-note b {
-  margin-top: 5px;
-  color: #fff;
-  font-size: 13px;
-}
-.sidebar-note small {
-  margin-top: 5px;
-  color: #8f8aa1;
-  font-size: 10px;
-  line-height: 1.5;
-}
-.workspace {
-  flex: 1;
-}
-.topbar {
-  display: flex;
-  height: 62px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 35px;
-  background: #fff;
-  border-bottom: 1px solid #e7e5ec;
-  color: #7b8495;
-  font-size: 12px;
-}
-.topbar b {
-  color: #364153;
-}
-.environment {
-  padding: 4px 7px;
-  margin-right: 16px;
-  color: #6d28d9;
-  background: #f3e8ff;
-  border-radius: 10px;
-  font-size: 9px;
   font-weight: 800;
 }
-.user {
-  color: #4b5563;
-}
-.content {
-  max-width: 1450px;
-  padding: 31px 38px 44px;
-  margin: 0 auto;
-}
-.page-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-.eyebrow {
-  margin: 0 0 7px;
-  color: #7c3aed;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1.7px;
-}
-.page-heading h1 {
-  margin: 0;
-  font-size: 28px;
-}
-.page-heading p:not(.eyebrow) {
-  margin: 8px 0 0;
-  color: #7b8495;
-  font-size: 12px;
-}
-.heading-actions {
-  display: flex;
-  gap: 10px;
-}
-.primary,
-.secondary {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.primary {
-  color: #fff;
-  background: linear-gradient(135deg, #7c3aed, #9333ea);
-  border: 1px solid #7c3aed;
-}
-.secondary {
-  color: #475569;
-  background: #fff;
-  border: 1px solid #dfe3ea;
-}
-button:disabled {
-  opacity: 0.55;
-}
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 16px;
-}
-.metric-grid.muted {
-  opacity: 0.55;
-}
-.metric-card,
-.panel {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 3px 12px #1f29370a;
-}
-.metric-card {
-  padding: 18px 19px;
-}
-.metric-card > span {
-  color: #64748b;
-  font-size: 12px;
-}
-.metric-card strong {
-  display: block;
-  margin: 11px 0 6px;
-  font-size: 26px;
-}
-.metric-card small {
-  font-size: 11px;
-  font-weight: 650;
-}
-.up {
-  color: #059669;
-}
-.down {
-  color: #dc4b5d;
-}
-.flat {
-  color: #d97706;
-}
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.65fr 1fr;
-  gap: 16px;
-}
-.lower-grid {
-  margin-top: 16px;
-  grid-template-columns: 1.35fr 1fr;
-}
-.panel {
-  padding: 20px;
-}
-.panel-heading {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.panel h2 {
-  margin: 0;
-  font-size: 15px;
-}
-.panel-heading p {
-  margin: 5px 0 0;
-  color: #8490a1;
-  font-size: 11px;
-}
-.link-button {
-  color: #7c3aed;
-  background: transparent;
-  border: 0;
-  font-size: 11px;
-  font-weight: 700;
-}
-.table-head,
-.task-row {
-  display: grid;
-  grid-template-columns: 2.4fr 1fr 0.8fr;
-  gap: 12px;
-  align-items: center;
-}
-.table-head {
-  padding: 8px 10px;
-  color: #8a95a5;
-  background: #faf9fc;
-  font-size: 10px;
-}
-.task-row {
-  padding: 13px 10px;
-  color: #596579;
-  border-bottom: 1px solid #f0edf4;
-  font-size: 11px;
-}
-.task-row b {
-  display: block;
-  overflow: hidden;
-  color: #303b4d;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-}
-.task-row small {
-  display: block;
-  margin-top: 4px;
-  color: #9aa3b1;
-  font-size: 9px;
-}
-.status {
+.sidebar-brand-full {
   display: inline-flex;
-  width: fit-content;
-  padding: 4px 8px;
-  color: #6d28d9;
-  background: #f3e8ff;
-  border-radius: 12px;
-  font-weight: 700;
+  flex-direction: column;
+  text-align: left;
 }
-.status.completed {
-  color: #047857;
-  background: #ecfdf5;
+.sidebar-brand-full strong {
+  font-size: 14px;
 }
-.status.failed,
-.status.cancelled {
-  color: #be123c;
-  background: #fff1f2;
-}
-.count {
-  display: grid;
-  width: 29px;
-  height: 29px;
-  color: #7c3aed;
-  background: #f3e8ff;
-  border-radius: 9px;
-  place-items: center;
-  font-weight: 800;
-}
-.empty {
-  padding: 35px 10px;
-  color: #929cab;
-  text-align: center;
-  font-size: 12px;
-}
-.approval-empty {
-  padding-top: 53px;
-}
-.approval-item {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 0;
-  border-bottom: 1px solid #f0edf4;
-}
-.approval-icon {
-  display: grid;
-  width: 29px;
-  height: 29px;
-  color: #7c3aed;
-  background: #f3e8ff;
-  border-radius: 8px;
-  place-items: center;
-}
-.approval-item b,
-.approval-item small {
-  display: block;
-}
-.approval-item b {
-  font-size: 11px;
-}
-.approval-item small {
-  margin-top: 4px;
-  color: #929cab;
+.sidebar-brand-full small {
+  margin-top: 1px;
   font-size: 9px;
+  font-weight: 400;
+  opacity: 0.65;
 }
-.flow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 9px;
-  padding: 18px;
-  background: linear-gradient(90deg, #faf5ff, #fdf2f8);
-  border-radius: 10px;
-}
-.flow span {
-  padding: 8px 10px;
-  color: #53328e;
-  background: #fff;
-  border: 1px solid #e9d5ff;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 700;
-  text-align: center;
-}
-.flow i {
-  color: #a78bfa;
-  font-style: normal;
-}
-.legend {
-  margin-top: 14px;
-  color: #7b8495;
-  font-size: 10px;
-  word-spacing: 7px;
-}
-.legend b {
-  display: inline-grid;
-  width: 18px;
-  height: 18px;
-  color: #fff;
-  background: #7c3aed;
-  border-radius: 5px;
-  place-items: center;
-  font-size: 9px;
-}
-.alert-item {
-  display: flex;
-  gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0edf4;
-}
-.alert-item > i {
-  width: 7px;
-  height: 7px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: #f59e0b;
-}
-.alert-item > i.high {
-  background: #ef476f;
-}
-.alert-item b {
-  font-size: 11px;
-}
-.alert-item p {
-  margin: 5px 0;
-  color: #748094;
-  font-size: 10px;
-  line-height: 1.5;
-}
-.alert-item small {
-  color: #9ba4b2;
-  font-size: 9px;
-}
-.error-state {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 17px;
-  margin-bottom: 16px;
-  color: #a32642;
-  background: #fff1f4;
-  border: 1px solid #ffd7e0;
-  border-radius: 9px;
-  font-size: 12px;
-}
-.error-state button {
-  color: inherit;
-  background: transparent;
+.commerce-sidebar .nav-link {
+  width: 100%;
   border: 0;
-  text-decoration: underline;
+  text-align: left;
 }
-@media (max-width: 1200px) {
-  .sidebar {
-    width: 216px;
+.commerce-sidebar .nav-link.active {
+  color: #fff;
+  background: var(--cui-primary);
+}
+.commerce-sidebar .sidebar-nav {
+  padding-top: 0.5rem;
+}
+.commerce-sidebar .sidebar-footer {
+  margin-top: auto;
+}
+.header-search {
+  width: 260px;
+}
+.task-name {
+  max-width: 360px;
+}
+.body {
+  min-height: calc(100vh - 8rem);
+}
+@media (max-width: 991.98px) {
+  .wrapper {
+    padding-inline-start: 0;
   }
-  .content {
-    padding: 27px 24px 38px;
-  }
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .dashboard-grid,
-  .lower-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .flow {
-    justify-content: flex-start;
+  .commerce-sidebar:not(.show) {
+    margin-left: -256px;
   }
 }
 </style>

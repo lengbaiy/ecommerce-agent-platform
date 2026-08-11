@@ -16,7 +16,7 @@
 
 ## 技术栈
 
-- Web：Vue 3、TypeScript、Vite、Pinia、ECharts
+- Web：Vue 3、TypeScript、Vite、Pinia、CoreUI Vue、Chart.js
 - API：FastAPI、Pydantic、SQLAlchemy
 - Agent：LangGraph，1 个 Supervisor + 4 个业务 Agent
 - 依赖：PostgreSQL、Redis、Qdrant、MinIO
@@ -83,3 +83,7 @@ data/                     脱敏固定数据集约定
 5. M5：固定评测集、OpenTelemetry、Docker 验收与试点。
 
 完整设计见 [docs/PROJECT_FRAMEWORK.md](docs/PROJECT_FRAMEWORK.md)，需求对应关系见 [docs/PRD_TRACEABILITY.md](docs/PRD_TRACEABILITY.md)。
+
+## 开源界面说明
+
+管理端界面基于 MIT 许可的 [CoreUI Free Vue Admin Template](https://github.com/coreui/coreui-free-vue-admin-template) 进行业务化改造。具体版本、上游提交及许可文本见 [frontend/THIRD_PARTY_NOTICES.md](frontend/THIRD_PARTY_NOTICES.md)。
