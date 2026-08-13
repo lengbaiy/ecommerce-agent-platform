@@ -52,9 +52,11 @@ npm run dev
 Windows 可直接运行：
 
 ```powershell
-./scripts/Start-Local.ps1
-./scripts/Verify-Code.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/Start-Local.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/Verify-Code.ps1
 ```
+
+完整的环境准备、启动、停止与故障排查说明见 [docs/STARTUP.md](docs/STARTUP.md)。
 
 ## 目录
 
