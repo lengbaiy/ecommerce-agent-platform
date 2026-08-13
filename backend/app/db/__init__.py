@@ -1,3 +1,25 @@
-from app.db.models import AgentStepRecord, AgentTaskRecord, ApprovalRecord, Base, ToolCallRecord
+from app.db.models import (
+    AgentStepRecord,
+    AgentTaskRecord,
+    ApprovalRecord,
+    AuthSessionRecord,
+    Base,
+    CaptchaChallengeRecord,
+    ToolCallRecord,
+    UserAccountRecord,
+)
+from app.db.session import SessionFactory, database_ready, init_database
 
-__all__ = ["AgentStepRecord", "AgentTaskRecord", "ApprovalRecord", "Base", "ToolCallRecord"]
+__all__ = [
+    "AgentStepRecord",
+    "AgentTaskRecord",
+    "ApprovalRecord",
+    "AuthSessionRecord",
+    "Base",
+    "SessionFactory",
+    "CaptchaChallengeRecord",
+    "ToolCallRecord",
+    "UserAccountRecord",
+    "database_ready",
+    "init_database",
+]

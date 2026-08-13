@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "../auth/session";
+
 export type MetricCard = {
   code: string;
   label: string;
@@ -35,9 +37,11 @@ export type AgentTask = {
 type TaskList = { items: AgentTask[]; total: number };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/v1${path}`, {
-    headers: { "Content-Type": "application/json" },
+  const headers = new Headers(options?.headers);
+  headers.set("Content-Type", "application/json");
+  const response = await authenticatedFetch(`/api/v1${path}`, {
     ...options,
+    headers,
   });
   if (!response.ok) throw new Error(`请求失败：${response.status}`);
   return response.json() as Promise<T>;
@@ -55,8 +59,6 @@ export function createMarketTask(shopId: string) {
   return request<AgentTask>("/agent/tasks", {
     method: "POST",
     body: JSON.stringify({
-      tenant_id: "local",
-      user_id: "operator-001",
       user_query: "分析便携咖啡机在 US 市场是否值得进入，目标毛利不低于 30%",
       intent: "market_entry",
       business_context: { shop_id: shopId, market: "US", category: "coffee_machine" },

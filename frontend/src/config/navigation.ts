@@ -81,4 +81,13 @@ export const navigationItems: NavigationItem[] = [
     apiModule: "evaluation",
     group: "system",
   },
+  {
+    id: "permissions",
+    label: "权限管理",
+    shortLabel: "权限",
+    icon: "shield",
+    description: "企业用户、角色与服务端权限映射",
+    apiModule: "identity_access",
+    group: "system",
+  },
 ];

@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 import {
   createMarketTask,
@@ -50,7 +50,6 @@ export function useOperationsWorkspace() {
     }
   }
 
-  onMounted(loadWorkspace);
   return {
     overview,
     tasks,

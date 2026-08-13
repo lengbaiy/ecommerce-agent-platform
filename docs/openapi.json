@@ -1,18 +1,359 @@
-{
+﻿{
   "openapi": "3.1.0",
   "info": {
     "title": "E-commerce Operations Intelligence Agent API",
-    "description": "电商智能运营 Agent 平台 API。关键结论证据化，节点状态可恢复，正式商品方案等写操作必须审批且满足幂等约束。",
-    "version": "0.1.0"
+    "description": "����������Ӫ Agent ƽ̨ API����ݺ��⻧�������ɷ������֤�߽��ṩ���߷���д��������ͨ������������ƥ�������ա�",
+    "version": "0.2.0"
   },
   "paths": {
+    "/api/v1/auth/captcha": {
+      "post": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Create Captcha",
+        "operationId": "create_captcha_api_v1_auth_captcha_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Captcha Api V1 Auth Captcha Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/captcha/{challenge_id}/verify": {
+      "post": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Verify Captcha",
+        "operationId": "verify_captcha_api_v1_auth_captcha__challenge_id__verify_post",
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Challenge Id"
+            }
+          },
+          {
+            "name": "position",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Position"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Verify Captcha Api V1 Auth Captcha  Challenge Id  Verify Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/captcha/{challenge_id}/image": {
+      "get": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Captcha Image",
+        "operationId": "captcha_image_api_v1_auth_captcha__challenge_id__image_get",
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Challenge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Login Api V1 Auth Login Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Principal"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/users": {
+      "get": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "List Users",
+        "operationId": "list_users_api_v1_auth_users_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Users Api V1 Auth Users Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Create User",
+        "operationId": "create_user_api_v1_auth_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create User Api V1 Auth Users Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/users/{user_id}": {
+      "patch": {
+        "tags": [
+          "�����Ȩ��"
+        ],
+        "summary": "Update User",
+        "operationId": "update_user_api_v1_auth_users__user_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Update User Api V1 Auth Users  User Id  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/agent/tasks": {
       "post": {
         "tags": [
-          "Agent 任务"
+          "Agent ����"
         ],
         "summary": "Create Task",
         "operationId": "create_task_api_v1_agent_tasks_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -48,10 +389,15 @@
       },
       "get": {
         "tags": [
-          "Agent 任务"
+          "Agent ����"
         ],
         "summary": "List Tasks",
         "operationId": "list_tasks_api_v1_agent_tasks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -109,10 +455,15 @@
     "/api/v1/agent/tasks/{task_id}": {
       "get": {
         "tags": [
-          "Agent 任务"
+          "Agent ����"
         ],
         "summary": "Get Task",
         "operationId": "get_task_api_v1_agent_tasks__task_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -151,10 +502,15 @@
     "/api/v1/agent/tasks/{task_id}/events": {
       "get": {
         "tags": [
-          "Agent 任务"
+          "Agent ����"
         ],
         "summary": "Task Events",
         "operationId": "task_events_api_v1_agent_tasks__task_id__events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -186,10 +542,15 @@
     "/api/v1/agent/tasks/{task_id}/cancel": {
       "post": {
         "tags": [
-          "Agent 任务"
+          "Agent ����"
         ],
         "summary": "Cancel Task",
         "operationId": "cancel_task_api_v1_agent_tasks__task_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -228,10 +589,15 @@
     "/api/v1/approvals/{task_id}/approve": {
       "post": {
         "tags": [
-          "审批"
+          "����"
         ],
         "summary": "Approve",
         "operationId": "approve_api_v1_approvals__task_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -240,6 +606,23 @@
             "schema": {
               "type": "string",
               "title": "Task Id"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reason"
             }
           }
         ],
@@ -270,10 +653,15 @@
     "/api/v1/approvals/{task_id}/reject": {
       "post": {
         "tags": [
-          "审批"
+          "����"
         ],
         "summary": "Reject",
         "operationId": "reject_api_v1_approvals__task_id__reject_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -282,6 +670,23 @@
             "schema": {
               "type": "string",
               "title": "Task Id"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reason"
             }
           }
         ],
@@ -312,10 +717,15 @@
     "/api/v1/dashboard/overview": {
       "get": {
         "tags": [
-          "经营总览"
+          "��Ӫ����"
         ],
         "summary": "Overview",
         "operationId": "overview_api_v1_dashboard_overview_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "shop_id",
@@ -356,7 +766,7 @@
     "/api/v1/products": {
       "get": {
         "tags": [
-          "商品"
+          "��Ʒ"
         ],
         "summary": "List Products",
         "operationId": "list_products_api_v1_products_get",
@@ -407,7 +817,7 @@
     "/api/v1/analytics/market": {
       "get": {
         "tags": [
-          "分析"
+          "����"
         ],
         "summary": "Market",
         "operationId": "market_api_v1_analytics_market_get",
@@ -461,7 +871,7 @@
     "/api/v1/analytics/operations": {
       "get": {
         "tags": [
-          "分析"
+          "����"
         ],
         "summary": "Operations",
         "operationId": "operations_api_v1_analytics_operations_get",
@@ -521,7 +931,7 @@
     "/api/v1/knowledge/search": {
       "post": {
         "tags": [
-          "知识库"
+          "֪ʶ��"
         ],
         "summary": "Search",
         "operationId": "search_api_v1_knowledge_search_post",
@@ -563,6 +973,9 @@
     },
     "/health": {
       "get": {
+        "tags": [
+          "ƽ̨"
+        ],
         "summary": "Health",
         "operationId": "health_health_get",
         "responses": {
@@ -577,6 +990,25 @@
                   "type": "object",
                   "title": "Response Health Health Get"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "ƽ̨"
+        ],
+        "summary": "Readiness",
+        "operationId": "readiness_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -722,6 +1154,17 @@
               }
             ],
             "title": "Approval Hash"
+          },
+          "approver_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Id"
           },
           "events": {
             "items": {
@@ -880,6 +1323,40 @@
         ],
         "title": "KnowledgeSearchRequest"
       },
+      "LoginRequest": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Tenant Id"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "captcha_id": {
+            "type": "string",
+            "title": "Captcha Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "username",
+          "password",
+          "captcha_id"
+        ],
+        "title": "LoginRequest"
+      },
       "MetricCard": {
         "properties": {
           "code": {
@@ -954,7 +1431,7 @@
         ],
         "title": "OperatingAlert"
       },
-      "TaskCreate": {
+      "Principal": {
         "properties": {
           "tenant_id": {
             "type": "string",
@@ -964,8 +1441,90 @@
           "user_id": {
             "type": "string",
             "minLength": 1,
-            "title": "User Id",
-            "default": "local-user"
+            "title": "User Id"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Roles"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Permissions"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "user_id"
+        ],
+        "title": "Principal"
+      },
+      "TaskCreate": {
+        "properties": {
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
           },
           "user_query": {
             "type": "string",
@@ -995,7 +1554,6 @@
         },
         "type": "object",
         "required": [
-          "tenant_id",
           "user_query"
         ],
         "title": "TaskCreate"
@@ -1024,6 +1582,101 @@
           "CANCELLED"
         ],
         "title": "TaskStatus"
+      },
+      "UserCreateRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9._-]{3,64}$",
+            "title": "Username"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 96,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 10,
+            "title": "Password"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "display_name",
+          "password",
+          "roles"
+        ],
+        "title": "UserCreateRequest"
+      },
+      "UserUpdateRequest": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 96,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roles"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdateRequest"
       },
       "ValidationError": {
         "properties": {
@@ -1065,20 +1718,26 @@
         ],
         "title": "ValidationError"
       }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
     }
   },
   "tags": [
     {
-      "name": "经营总览",
-      "description": "经营指标、预警和审批概览。"
+      "name": "��Ӫ����",
+      "description": "��Ӫָ�ꡢԤ��������������"
     },
     {
-      "name": "Agent 任务",
-      "description": "任务创建、状态、事件和取消。"
+      "name": "Agent ����",
+      "description": "���񴴽���״̬���¼���ȡ����"
     },
     {
-      "name": "审批",
-      "description": "高风险写操作的人工审批。"
+      "name": "����",
+      "description": "�߷���д�������˹�������"
     }
   ]
 }

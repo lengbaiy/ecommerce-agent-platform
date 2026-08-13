@@ -74,7 +74,7 @@ $backendProcess.Id | Set-Content -LiteralPath (Join-Path $workRoot "api.pid")
 $frontendProcess.Id | Set-Content -LiteralPath (Join-Path $workRoot "web.pid")
 
 try {
-    Wait-Endpoint -Url "http://127.0.0.1:$ApiPort/health" -ServiceName "API" -ErrorLog $backendErrorLog
+    Wait-Endpoint -Url "http://127.0.0.1:$ApiPort/ready" -ServiceName "API" -ErrorLog $backendErrorLog
     Wait-Endpoint -Url "http://127.0.0.1:$WebPort/" -ServiceName "Web" -ErrorLog $frontendErrorLog
 } catch {
     foreach ($processId in @($backendProcess.Id, $frontendProcess.Id)) {
@@ -87,4 +87,5 @@ Write-Host "Project started successfully."
 Write-Host "Web:      http://127.0.0.1:$WebPort/"
 Write-Host "API docs: http://127.0.0.1:$ApiPort/docs"
 Write-Host "Health:   http://127.0.0.1:$ApiPort/health"
+Write-Host "Ready:    http://127.0.0.1:$ApiPort/ready"
 Write-Host "Logs:     $workRoot"

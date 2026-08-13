@@ -13,9 +13,10 @@ if (-not $npmCommand) {
 
 Push-Location (Join-Path $repositoryRoot "backend")
 try {
-    & $backendPython -m ruff check app tests
-    & $backendPython -m ruff format --check app tests
-    & $backendPython -m pytest -q
+    & $backendPython -m ruff check app tests migrations
+    & $backendPython -m ruff format --check app tests migrations
+    & $backendPython -m pytest -q --cov=app --cov-fail-under=80
+    & $backendPython -m coverage erase
 } finally {
     Pop-Location
 }
@@ -24,6 +25,13 @@ Push-Location (Join-Path $repositoryRoot "frontend")
 try {
     & $npmCommand.Source run lint
     & $npmCommand.Source run format:check
+    & $npmCommand.Source run build
+} finally {
+    Pop-Location
+}
+
+Push-Location (Join-Path $repositoryRoot "clients\mobile-ops")
+try {
     & $npmCommand.Source run build
 } finally {
     Pop-Location

@@ -1,7 +1,29 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from app.core.security import get_current_principal, permissions_for_roles
 from app.main import app
 from app.tools.contracts import ProfitInput, calculate_profit
+
+
+def principal_override():
+    from app.core.security import Principal
+
+    roles = frozenset({"operator", "approver"})
+    return Principal(
+        tenant_id="demo",
+        user_id="operator-001",
+        username="operator-001",
+        roles=roles,
+        permissions=permissions_for_roles(roles),
+    )
+
+
+@pytest.fixture(autouse=True)
+def authenticated_principal():
+    app.dependency_overrides[get_current_principal] = principal_override
+    yield
+    app.dependency_overrides.pop(get_current_principal, None)
 
 
 def test_market_entry_completes_with_evidence() -> None:

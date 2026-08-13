@@ -1,6 +1,12 @@
+from app.core.config import settings
+from app.db import SessionFactory, init_database
+from app.repositories import SQLAlchemyTaskRepository
 from app.services import DashboardService, TaskService
 
-task_service = TaskService()
+if settings.auto_create_schema and settings.environment.lower() not in {"production", "prod"}:
+    init_database()
+task_repository = SQLAlchemyTaskRepository(SessionFactory)
+task_service = TaskService(repository=task_repository)
 dashboard_service = DashboardService()
 
 

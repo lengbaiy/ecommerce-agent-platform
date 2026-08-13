@@ -1,19 +1,20 @@
 {
   "name": "ecommerce-agent-mobile-ops",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "type": "module",
   "scripts": {
-    "dev:h5": "uni -p h5",
-    "dev:mp-weixin": "uni -p mp-weixin",
-    "build:h5": "uni build -p h5",
-    "build:mp-weixin": "uni build -p mp-weixin"
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@dcloudio/uni-app": "^3.0.0-4080620260304001",
     "vue": "^3.5.13"
   },
   "devDependencies": {
-    "@dcloudio/vite-plugin-uni": "^3.0.0-4080620260304001",
-    "vite": "^6.0.5"
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vue-tsc": "^2.2.0"
   }
 }

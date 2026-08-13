@@ -58,6 +58,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/Start-Local.ps
 - Web 管理端：<http://127.0.0.1:5173/>
 - API 文档：<http://127.0.0.1:8000/docs>
 - 健康检查：<http://127.0.0.1:8000/health>
+- 就绪检查：<http://127.0.0.1:8000/ready>
 
 需要使用其他端口时：
 
@@ -146,3 +147,44 @@ npm run build
 5. **Node.js 引擎警告**：升级到 Node.js 22.13+，再删除 `frontend/node_modules` 并重新安装依赖。
 
 本地版本使用演示数据完成业务闭环，不会自动连接真实电商账户或生产数据。
+
+## 9. 身份认证与数据库迁移
+
+本地默认使用内置账号登录和 JWT 会话。首次启动账号为租户 `local`、用户名 `admin`、密码 `Admin@123456`；登录前必须完成一次性滑块验证。请在共享开发环境立即修改 `BOOTSTRAP_ADMIN_PASSWORD`。
+
+生产配置至少需要：
+
+```powershell
+$env:APP_ENV = "production"
+$env:AUTH_MODE = "jwt"
+$env:JWT_SECRET = "从密钥管理服务注入的至少 32 字符密钥"
+$env:JWT_ISSUER = "https://identity.example.com/"
+$env:JWT_AUDIENCE = "ecommerce-agent-api"
+$env:AUTO_CREATE_SCHEMA = "false"
+```
+
+生产启动前执行迁移：
+
+```powershell
+Set-Location backend
+./.venv/Scripts/python.exe -m alembic upgrade head
+```
+
+如需将任务交给独立 Worker，将 API 与 Worker 同时设置为 `TASK_EXECUTION_MODE=worker`，再运行：
+
+```powershell
+Set-Location backend
+./.venv/Scripts/python.exe -m app.worker
+```
+
+## 10. 移动运营端
+
+移动运营端当前是独立的 Vue 3 + Vite 响应式 H5 框架：
+
+```powershell
+Set-Location clients/mobile-ops
+npm install
+npm run dev
+```
+
+微信小程序适配应作为独立客户端工程接入，不与 Web/H5 的稳定依赖树混装。

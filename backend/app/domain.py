@@ -34,8 +34,8 @@ class ApprovalStatus(StrEnum):
 
 
 class TaskCreate(BaseModel):
-    tenant_id: str = Field(min_length=1)
-    user_id: str = Field(default="local-user", min_length=1)
+    tenant_id: str | None = Field(default=None, min_length=1)
+    user_id: str | None = Field(default=None, min_length=1)
     user_query: str = Field(min_length=5, max_length=1000)
     intent: str = "market_entry"
     business_context: dict[str, Any] = Field(default_factory=dict)
@@ -75,6 +75,7 @@ class AgentTask(BaseModel):
     result: AgentResult | None = None
     approval_status: ApprovalStatus = ApprovalStatus.NOT_REQUIRED
     approval_hash: str | None = None
+    approver_id: str | None = None
     events: list[str] = Field(default_factory=list)
     error: str | None = None
 

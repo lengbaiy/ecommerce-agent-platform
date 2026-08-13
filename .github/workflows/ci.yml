@@ -12,9 +12,10 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install -e ".[dev]"
-      - run: ruff check app tests
-      - run: ruff format --check app tests
-      - run: pytest -q
+      - run: ruff check app tests migrations
+      - run: ruff format --check app tests migrations
+      - run: pytest -q --cov=app --cov-fail-under=80
+      - run: pip-audit --skip-editable
       - run: python -c "import json; from app.main import app; json.dumps(app.openapi())"
   frontend:
     runs-on: ubuntu-latest
@@ -22,8 +23,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm, cache-dependency-path: frontend/package.json }
+        with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+  mobile-ops:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: clients/mobile-ops } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          { node-version: 22, cache: npm, cache-dependency-path: clients/mobile-ops/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high

@@ -57,6 +57,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/Verify-Code.ps
 ```
 
 完整的环境准备、启动、停止与故障排查说明见 [docs/STARTUP.md](docs/STARTUP.md)。
+企业级身份、租户、持久化、审批和任务执行底座说明见 [docs/ENTERPRISE_FOUNDATION.md](docs/ENTERPRISE_FOUNDATION.md)。
+登录流程、会话策略与 RBAC 权限矩阵见 [docs/AUTHORIZATION.md](docs/AUTHORIZATION.md)。
 
 ## 目录
 
