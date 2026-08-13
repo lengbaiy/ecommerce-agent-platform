@@ -11,3 +11,9 @@ The frontend layout and component structure are based on the open-source [CoreUI
 The original license text is preserved in `licenses/CoreUI-Free-Vue-Admin-Template.LICENSE`.
 
 All e-commerce domain models, Chinese copy, API integration, task workflows, and business-specific dashboard content in this repository are project-specific adaptations.
+
+The login page uses [`vue3-slide-verify`](https://github.com/monoplasty/vue3-slide-verify) version 1.1.8 for its Canvas puzzle interaction.
+
+- License: MIT
+- Copyright: 2021 YUQIAN
+- License text: `licenses/vue3-slide-verify.LICENSE`

@@ -29,98 +29,6 @@
         }
       }
     },
-    "/api/v1/auth/captcha/{challenge_id}/verify": {
-      "post": {
-        "tags": [
-          "�����Ȩ��"
-        ],
-        "summary": "Verify Captcha",
-        "operationId": "verify_captcha_api_v1_auth_captcha__challenge_id__verify_post",
-        "parameters": [
-          {
-            "name": "challenge_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Challenge Id"
-            }
-          },
-          {
-            "name": "position",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 0,
-              "title": "Position"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "title": "Response Verify Captcha Api V1 Auth Captcha  Challenge Id  Verify Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/captcha/{challenge_id}/image": {
-      "get": {
-        "tags": [
-          "�����Ȩ��"
-        ],
-        "summary": "Captcha Image",
-        "operationId": "captcha_image_api_v1_auth_captcha__challenge_id__image_get",
-        "parameters": [
-          {
-            "name": "challenge_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Challenge Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -1346,6 +1254,19 @@
           "captcha_id": {
             "type": "string",
             "title": "Captcha Id"
+          },
+          "slider_position": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slider Position"
           }
         },
         "type": "object",

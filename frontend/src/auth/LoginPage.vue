@@ -1,35 +1,45 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import SlideVerify, { type SlideVerifyInstance } from "vue3-slide-verify";
+import "vue3-slide-verify/dist/style.css";
 
-import { createCaptcha, login, verifyCaptcha, type CaptchaChallenge } from "./api";
+import { createCaptcha, login, type CaptchaChallenge } from "./api";
 import { setSession } from "./session";
 
 const tenantId = ref("local");
 const username = ref("admin");
 const password = ref("");
 const captcha = ref<CaptchaChallenge | null>(null);
-const sliderPosition = ref(0);
-const captchaVerified = ref(false);
+const sliderPosition = ref<number | null>(null);
+const captchaMessage = ref("请拖动拼图滑块完成验证");
+const block = ref<SlideVerifyInstance>();
 const loading = ref(false);
 const message = ref("");
+const captchaReady = computed(() => Boolean(captcha.value));
 
 async function refreshCaptcha(clearMessage = true) {
   captcha.value = await createCaptcha();
-  sliderPosition.value = 0;
-  captchaVerified.value = false;
+  sliderPosition.value = null;
+  captchaMessage.value = "请拖动拼图滑块完成验证";
   if (clearMessage) message.value = "";
+  block.value?.refresh();
 }
 
-async function finishSlider() {
-  if (!captcha.value) return;
-  try {
-    await verifyCaptcha(captcha.value.id, sliderPosition.value);
-    captchaVerified.value = true;
-    message.value = "验证通过";
-  } catch (error) {
-    message.value = error instanceof Error ? error.message : "验证失败";
-    await refreshCaptcha(false);
-  }
+function onSuccess(detail: { timestamp: number; left: number }) {
+  sliderPosition.value = Math.round(detail.left);
+  captchaMessage.value = `验证通过，用时 ${(detail.timestamp / 1000).toFixed(1)} 秒`;
+  message.value = "";
+}
+
+function onFail() {
+  sliderPosition.value = null;
+  captchaMessage.value = "拼图位置不匹配，请重新拖动";
+}
+
+function onAgain() {
+  sliderPosition.value = null;
+  captchaMessage.value = "检测到异常滑动轨迹，请重新验证";
+  block.value?.refresh();
 }
 
 async function submit() {
@@ -41,8 +51,8 @@ async function submit() {
     message.value = "请输入至少 8 位密码";
     return;
   }
-  if (!captcha.value || !captchaVerified.value) {
-    message.value = "请先完成滑块验证";
+  if (!captcha.value || sliderPosition.value === null) {
+    message.value = "请先完成拼图滑块验证";
     return;
   }
   loading.value = true;
@@ -53,7 +63,8 @@ async function submit() {
         tenant_id: tenantId.value,
         username: username.value,
         password: password.value,
-        captcha_id: captcha.value.id,
+        captcha_id: captcha.value.captcha_id,
+        slider_position: sliderPosition.value,
       }),
     );
   } catch (error) {
@@ -109,22 +120,22 @@ onMounted(refreshCaptcha);
             <span>安全验证</span>
             <button type="button" @click="refreshCaptcha()">换一张</button>
           </div>
-          <div v-if="captcha" class="captcha-scene">
-            <img :src="captcha.image_url" alt="滑块验证码背景" />
-            <div class="captcha-piece" :style="{ left: `${sliderPosition}%` }"></div>
-          </div>
-          <input
-            v-model.number="sliderPosition"
-            class="captcha-slider"
-            type="range"
-            min="0"
-            max="100"
-            :disabled="captchaVerified"
-            aria-label="拖动滑块完成安全验证"
-            @change="finishSlider"
+          <p class="captcha-help">拖动滑块至缺口处，完成登录校验</p>
+          <SlideVerify
+            v-if="captchaReady"
+            ref="block"
+            :w="captcha?.canvas_width"
+            :h="captcha?.canvas_height"
+            :offset="captcha?.puzzle_offset"
+            :accuracy="4"
+            slider-text="向右拖动完成拼图验证"
+            @success="onSuccess"
+            @fail="onFail"
+            @again="onAgain"
+            @refresh="onFail"
           />
-          <div class="captcha-tip" :class="{ verified: captchaVerified }">
-            {{ captchaVerified ? "✓ 验证通过" : "拖动滑块，使拼图对准缺口" }}
+          <div class="captcha-tip" :class="{ verified: sliderPosition !== null }">
+            {{ captchaMessage }}
           </div>
         </div>
 
@@ -136,7 +147,12 @@ onMounted(refreshCaptcha);
         >
           {{ message }}
         </CAlert>
-        <CButton color="primary" size="lg" type="submit" :disabled="loading">
+        <CButton
+          color="primary"
+          size="lg"
+          type="submit"
+          :disabled="!captchaReady || loading || sliderPosition === null"
+        >
           {{ loading ? "正在登录…" : "登录" }}
         </CButton>
         <p class="demo-account">首次启动账号：<strong>local / admin / Admin@123456</strong></p>
@@ -260,37 +276,20 @@ onMounted(refreshCaptcha);
   color: #5856d6;
   background: transparent;
 }
-.captcha-scene {
-  position: relative;
-  height: 82px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #dbeafe, #eef2ff 45%, #d1fae5);
+.captcha-help {
+  margin: 7px 0 10px;
+  color: #8491a5;
+  font-size: 12px;
 }
-.captcha-scene img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.captcha-field :deep(.slide-verify) {
+  max-width: 100%;
+  margin: 0 auto;
 }
-.captcha-piece {
-  position: absolute;
-  top: 24px;
-  width: 28px;
-  height: 28px;
-  transform: translateX(-50%);
-  border-radius: 5px;
-}
-.captcha-piece {
-  border: 2px solid white;
-  background: #5856d6;
-  box-shadow: 0 3px 10px rgb(16 24 40 / 25%);
-}
-.captcha-slider {
-  width: 100%;
-  margin-top: 12px;
-  accent-color: #5856d6;
+.captcha-field :deep(.slide-verify-block) {
+  max-width: 100%;
 }
 .captcha-tip {
+  margin-top: 8px;
   text-align: center;
   color: #667085;
   font-size: 12px;

@@ -20,6 +20,7 @@ class LoginRequest(BaseModel):
     username: str = Field(min_length=3, max_length=64)
     password: str = Field(min_length=8, max_length=128)
     captcha_id: str
+    slider_position: int | None = Field(default=None, ge=0, le=1000)
 
 
 class UserCreateRequest(BaseModel):
@@ -60,7 +61,7 @@ class AuthService:
 
     def create_captcha(self) -> dict:
         challenge_id = str(uuid4())
-        target_x = 34 + randbelow(52)
+        target_x = 68 + randbelow(210)
         now = datetime.now(UTC)
         with SessionFactory() as session:
             session.add(
@@ -73,54 +74,14 @@ class AuthService:
             )
             session.commit()
         return {
-            "id": challenge_id,
-            "image_url": f"/api/v1/auth/captcha/{challenge_id}/image",
-            "tolerance": 4,
+            "provider": "local_puzzle",
+            "captcha_id": challenge_id,
+            "track_length": 100,
+            "canvas_width": 350,
+            "canvas_height": 150,
+            "puzzle_offset": target_x,
             "expires_in": 120,
         }
-
-    def captcha_image(self, challenge_id: str) -> str | None:
-        with SessionFactory() as session:
-            challenge = session.get(CaptchaChallengeRecord, challenge_id)
-            if challenge is None or challenge.expires_at.replace(tzinfo=UTC) < datetime.now(UTC):
-                return None
-            x = challenge.target_x
-        return "".join(
-            [
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 100">',
-                '<defs><linearGradient id="g"><stop stop-color="#dbeafe"/>',
-                '<stop offset=".48" stop-color="#eef2ff"/>',
-                '<stop offset="1" stop-color="#d1fae5"/></linearGradient>',
-                '<pattern id="p" width="19" height="19" patternUnits="userSpaceOnUse">',
-                '<circle cx="2" cy="2" r="1.4" fill="#64748b" opacity=".35"/>',
-                "</pattern></defs>",
-                '<rect width="500" height="100" rx="9" fill="url(#g)"/>',
-                '<rect width="500" height="100" fill="url(#p)"/>',
-                '<path d="M40 74 Q105 17 170 67 T300 58 T450 65" fill="none" ',
-                'stroke="#64748b" opacity=".22" stroke-width="9"/>',
-                f'<rect x="{x * 5 - 14}" y="33" width="28" height="28" rx="5" ',
-                'fill="#fff" fill-opacity=".3" stroke="#344054" stroke-width="2" ',
-                'stroke-dasharray="5 4"/></svg>',
-            ]
-        )
-
-    def verify_captcha(self, challenge_id: str, position: int) -> bool:
-        now = datetime.now(UTC)
-        with SessionFactory() as session:
-            challenge = session.get(CaptchaChallengeRecord, challenge_id)
-            if (
-                challenge is None
-                or challenge.expires_at.replace(tzinfo=UTC) < now
-                or challenge.verified
-                or challenge.login_consumed
-                or challenge.attempts >= 5
-            ):
-                return False
-            challenge.attempts += 1
-            if abs(challenge.target_x - position) <= 4:
-                challenge.verified = True
-            session.commit()
-            return challenge.verified
 
     def login(self, payload: LoginRequest) -> dict:
         now = datetime.now(UTC)
@@ -128,12 +89,19 @@ class AuthService:
             challenge = session.get(CaptchaChallengeRecord, payload.captcha_id)
             if (
                 challenge is None
-                or not challenge.verified
                 or challenge.login_consumed
                 or challenge.expires_at.replace(tzinfo=UTC) < now
             ):
-                raise unauthorized("verified captcha is required")
+                raise unauthorized("slider challenge is missing, expired or already used")
             challenge.login_consumed = True
+            challenge.attempts += 1
+            if (
+                payload.slider_position is None
+                or abs(challenge.target_x - payload.slider_position) > 4
+            ):
+                session.commit()
+                raise unauthorized("slider verification failed")
+            challenge.verified = True
 
             user = session.scalar(
                 select(UserAccountRecord).where(

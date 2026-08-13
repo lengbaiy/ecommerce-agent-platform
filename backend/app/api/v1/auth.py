@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.core.security import (
     Principal,
@@ -21,29 +19,6 @@ router = APIRouter(prefix="/auth", tags=["身份与权限"])
 @router.post("/captcha", status_code=status.HTTP_201_CREATED)
 def create_captcha() -> dict:
     return AuthService().create_captcha()
-
-
-@router.post("/captcha/{challenge_id}/verify")
-def verify_captcha(
-    challenge_id: str,
-    position: Annotated[int, Query(ge=0, le=100)],
-) -> dict[str, bool]:
-    verified = AuthService().verify_captcha(challenge_id, position)
-    if not verified:
-        raise HTTPException(status_code=422, detail="captcha verification failed")
-    return {"verified": True}
-
-
-@router.get("/captcha/{challenge_id}/image", response_class=Response)
-def captcha_image(challenge_id: str) -> Response:
-    image = AuthService().captcha_image(challenge_id)
-    if image is None:
-        raise HTTPException(status_code=404, detail="captcha not found or expired")
-    return Response(
-        content=image,
-        media_type="image/svg+xml",
-        headers={"Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'"},
-    )
 
 
 @router.post("/login")

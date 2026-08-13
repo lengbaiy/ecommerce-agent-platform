@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import Settings
 from app.core.security import Principal, decode_jwt_principal
-from app.db.models import Base, CaptchaChallengeRecord
-from app.db.session import SessionFactory, build_engine
+from app.db.models import Base
+from app.db.session import build_engine
 from app.domain import AgentTask, TaskCreate
 from app.main import app
 from app.repositories import InMemoryTaskRepository, SQLAlchemyTaskRepository
@@ -21,22 +21,16 @@ def login(
     password: str = "TestAdmin@123456",
 ) -> dict[str, str]:
     captcha = client.post("/api/v1/auth/captcha").json()
-    assert "target_x" not in captcha
-    assert client.get(captcha["image_url"]).headers["content-type"].startswith("image/svg+xml")
-    with SessionFactory() as session:
-        target_x = session.get(CaptchaChallengeRecord, captcha["id"]).target_x
-    verified = client.post(
-        f"/api/v1/auth/captcha/{captcha['id']}/verify",
-        params={"position": target_x},
-    )
-    assert verified.status_code == 200
+    assert captcha["provider"] == "local_puzzle"
+    assert captcha["canvas_width"] == 350
     response = client.post(
         "/api/v1/auth/login",
         json={
             "tenant_id": "local",
             "username": username,
             "password": password,
-            "captcha_id": captcha["id"],
+            "captcha_id": captcha["captcha_id"],
+            "slider_position": captcha["puzzle_offset"],
         },
     )
     assert response.status_code == 200
@@ -47,25 +41,28 @@ def test_login_requires_verified_slider_captcha() -> None:
     client = TestClient(app)
     with client:
         captcha = client.post("/api/v1/auth/captcha").json()
-        with SessionFactory() as session:
-            target_x = session.get(CaptchaChallengeRecord, captcha["id"]).target_x
         denied = client.post(
             "/api/v1/auth/login",
             json={
                 "tenant_id": "local",
                 "username": "admin",
                 "password": "TestAdmin@123456",
-                "captcha_id": captcha["id"],
+                "captcha_id": captcha["captcha_id"],
             },
         )
         assert denied.status_code == 401
 
-        wrong_position = 0 if target_x > 4 else 100
         failed = client.post(
-            f"/api/v1/auth/captcha/{captcha['id']}/verify",
-            params={"position": wrong_position},
+            "/api/v1/auth/login",
+            json={
+                "tenant_id": "local",
+                "username": "admin",
+                "password": "TestAdmin@123456",
+                "captcha_id": captcha["captcha_id"],
+                "slider_position": captcha["puzzle_offset"] + 5,
+            },
         )
-        assert failed.status_code == 422
+        assert failed.status_code == 401
 
 
 def test_login_session_permissions_and_logout() -> None:

@@ -1,9 +1,12 @@
 import { authenticatedFetch, type LoginSession, type SessionUser } from "./session";
 
 export type CaptchaChallenge = {
-  id: string;
-  image_url: string;
-  tolerance: number;
+  provider: "local_puzzle";
+  captcha_id: string;
+  track_length: number;
+  canvas_width: number;
+  canvas_height: number;
+  puzzle_offset: number;
   expires_in: number;
 };
 
@@ -13,19 +16,12 @@ export async function createCaptcha() {
   return response.json() as Promise<CaptchaChallenge>;
 }
 
-export async function verifyCaptcha(id: string, position: number) {
-  const response = await fetch(
-    `/api/v1/auth/captcha/${encodeURIComponent(id)}/verify?position=${position}`,
-    { method: "POST" },
-  );
-  if (!response.ok) throw new Error("滑块位置不正确，请重试");
-}
-
 export async function login(payload: {
   tenant_id: string;
   username: string;
   password: string;
   captcha_id: string;
+  slider_position: number;
 }) {
   const response = await fetch("/api/v1/auth/login", {
     method: "POST",
