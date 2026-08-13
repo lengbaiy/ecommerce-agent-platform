@@ -13,11 +13,11 @@ const captchaVerified = ref(false);
 const loading = ref(false);
 const message = ref("");
 
-async function refreshCaptcha() {
+async function refreshCaptcha(clearMessage = true) {
   captcha.value = await createCaptcha();
   sliderPosition.value = 0;
   captchaVerified.value = false;
-  message.value = "";
+  if (clearMessage) message.value = "";
 }
 
 async function finishSlider() {
@@ -28,11 +28,19 @@ async function finishSlider() {
     message.value = "验证通过";
   } catch (error) {
     message.value = error instanceof Error ? error.message : "验证失败";
-    await refreshCaptcha();
+    await refreshCaptcha(false);
   }
 }
 
 async function submit() {
+  if (!tenantId.value.trim() || !username.value.trim()) {
+    message.value = "请输入租户标识和用户名";
+    return;
+  }
+  if (password.value.length < 8) {
+    message.value = "请输入至少 8 位密码";
+    return;
+  }
   if (!captcha.value || !captchaVerified.value) {
     message.value = "请先完成滑块验证";
     return;
@@ -50,7 +58,7 @@ async function submit() {
     );
   } catch (error) {
     message.value = error instanceof Error ? error.message : "登录失败";
-    await refreshCaptcha();
+    await refreshCaptcha(false);
   } finally {
     loading.value = false;
   }
@@ -76,23 +84,30 @@ onMounted(refreshCaptcha);
     </section>
 
     <section class="login-panel">
-      <form class="login-card" @submit.prevent="submit">
+      <form class="login-card" novalidate @submit.prevent="submit">
         <div>
           <p class="eyebrow">WELCOME BACK</p>
           <h2>登录运营工作台</h2>
           <p class="muted">请输入企业租户与账号信息</p>
         </div>
 
-        <label>租户标识<CFormInput v-model="tenantId" autocomplete="organization" /></label>
-        <label>用户名<CFormInput v-model="username" autocomplete="username" /></label>
         <label
-          >密码<CFormInput v-model="password" type="password" autocomplete="current-password"
+          >租户标识<CFormInput v-model="tenantId" autocomplete="organization" required
+        /></label>
+        <label>用户名<CFormInput v-model="username" autocomplete="username" required /></label>
+        <label
+          >密码<CFormInput
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            minlength="8"
+            required
         /></label>
 
         <div class="captcha-field">
           <div class="captcha-header">
             <span>安全验证</span>
-            <button type="button" @click="refreshCaptcha">换一张</button>
+            <button type="button" @click="refreshCaptcha()">换一张</button>
           </div>
           <div v-if="captcha" class="captcha-scene">
             <img :src="captcha.image_url" alt="滑块验证码背景" />
@@ -113,7 +128,12 @@ onMounted(refreshCaptcha);
           </div>
         </div>
 
-        <CAlert v-if="message && !captchaVerified" color="danger" class="py-2 mb-0">
+        <CAlert
+          v-if="message && message !== '验证通过'"
+          color="danger"
+          class="py-2 mb-0"
+          role="alert"
+        >
           {{ message }}
         </CAlert>
         <CButton color="primary" size="lg" type="submit" :disabled="loading">

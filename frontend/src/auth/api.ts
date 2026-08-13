@@ -32,7 +32,20 @@ export async function login(payload: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("登录失败，请检查账号、密码与验证码");
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      detail?: string | Array<{ msg?: string }>;
+    } | null;
+    const detail = Array.isArray(body?.detail)
+      ? body.detail
+          .map((item) => item.msg)
+          .filter(Boolean)
+          .join("；")
+      : body?.detail;
+    if (response.status === 422) throw new Error(detail || "登录信息格式不正确");
+    if (response.status === 401) throw new Error("租户、账号或密码不正确，或验证码已失效");
+    throw new Error(typeof detail === "string" ? detail : "登录服务暂时不可用");
+  }
   return response.json() as Promise<LoginSession>;
 }
 
