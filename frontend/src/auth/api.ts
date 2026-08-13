@@ -39,7 +39,18 @@ export async function login(payload: {
           .join("；")
       : body?.detail;
     if (response.status === 422) throw new Error(detail || "登录信息格式不正确");
-    if (response.status === 401) throw new Error("租户、账号或密码不正确，或验证码已失效");
+    if (response.status === 401) {
+      if (detail === "slider verification failed") {
+        throw new Error("拼图位置未通过服务端校验，请刷新后重新拖动");
+      }
+      if (detail === "slider challenge is missing, expired or already used") {
+        throw new Error("拼图验证已过期或已使用，请刷新后重新验证");
+      }
+      if (detail === "account is temporarily locked") {
+        throw new Error("账号因连续失败已临时锁定，请稍后再试");
+      }
+      throw new Error("租户、账号或密码不正确");
+    }
     throw new Error(typeof detail === "string" ? detail : "登录服务暂时不可用");
   }
   return response.json() as Promise<LoginSession>;

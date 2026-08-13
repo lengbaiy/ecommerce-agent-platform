@@ -8,7 +8,7 @@ import { setSession } from "./session";
 
 const tenantId = ref("local");
 const username = ref("admin");
-const password = ref("");
+const password = ref("Admin@123456");
 const captcha = ref<CaptchaChallenge | null>(null);
 const sliderPosition = ref<number | null>(null);
 const captchaMessage = ref("请拖动拼图滑块完成验证");
