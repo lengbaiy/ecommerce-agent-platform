@@ -1,18 +1,11 @@
 import { computed, ref } from "vue";
 
-import {
-  createMarketTask,
-  fetchOverview,
-  fetchTasks,
-  type AgentTask,
-  type DashboardOverview,
-} from "../api/operations";
+import { fetchOverview, fetchTasks, type AgentTask, type DashboardOverview } from "../api/operations";
 
 export function useOperationsWorkspace() {
   const overview = ref<DashboardOverview>();
   const tasks = ref<AgentTask[]>([]);
   const loading = ref(true);
-  const creating = ref(false);
   const errorMessage = ref("");
   const pendingTasks = computed(() =>
     tasks.value.filter((task) => task.status === "WAITING_APPROVAL"),
@@ -38,27 +31,13 @@ export function useOperationsWorkspace() {
     }
   }
 
-  async function createTask(shopId = "amazon-us-demo") {
-    creating.value = true;
-    try {
-      await createMarketTask(shopId);
-      await loadWorkspace(shopId);
-    } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : "创建任务失败";
-    } finally {
-      creating.value = false;
-    }
-  }
-
   return {
     overview,
     tasks,
     pendingTasks,
     loading,
-    creating,
     errorMessage,
     dataCutoff,
     loadWorkspace,
-    createTask,
   };
 }

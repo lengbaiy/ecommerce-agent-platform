@@ -1,3 +1,28 @@
+x-common-environment: &common-environment
+  DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ecommerce_agent:change-me-for-local-only@db:5432/ecommerce_agent}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  AUTH_MODE: ${AUTH_MODE:-password}
+  AUTO_CREATE_SCHEMA: "false"
+  JWT_SECRET: ${JWT_SECRET:-local-development-session-secret-change-before-production}
+  LLM_PROVIDER: ${LLM_PROVIDER}
+  LLM_API_KEY: ${LLM_API_KEY}
+  LLM_BASE_URL: ${LLM_BASE_URL}
+  LLM_MODEL: ${LLM_MODEL}
+  LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-180}
+  LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+  LLM_STRUCTURED_OUTPUT_MODE: ${LLM_STRUCTURED_OUTPUT_MODE:-json_object}
+  LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-4096}
+  LLM_EXTRA_BODY_JSON: ${LLM_EXTRA_BODY_JSON:-{}}
+  LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0}
+  LLM_TOP_P: ${LLM_TOP_P:-1}
+  REVIEW_LLM_MAX_REVIEWS: ${REVIEW_LLM_MAX_REVIEWS:-60}
+  REVIEW_LLM_BATCH_SIZE: ${REVIEW_LLM_BATCH_SIZE:-20}
+  REVIEW_LLM_MAX_CONTENT_CHARS: ${REVIEW_LLM_MAX_CONTENT_CHARS:-8000}
+  MARKET_METRIC_UPLOAD_STORAGE_ROOT: ${MARKET_METRIC_UPLOAD_STORAGE_ROOT:-./data/uploads/market_metrics}
+  MARKET_METRIC_UPLOAD_MAX_BYTES: ${MARKET_METRIC_UPLOAD_MAX_BYTES:-5242880}
+  MARKET_METRIC_UPLOAD_MAX_UNCOMPRESSED_BYTES: ${MARKET_METRIC_UPLOAD_MAX_UNCOMPRESSED_BYTES:-52428800}
+  MARKET_METRIC_UPLOAD_MAX_ROWS: ${MARKET_METRIC_UPLOAD_MAX_ROWS:-500}
+
 services:
   db:
     image: postgres:16-alpine
@@ -7,6 +32,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-for-local-only}
     ports: ["5432:5432"]
     volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
@@ -23,15 +53,14 @@ services:
     ports: ["9000:9000", "9001:9001"]
     volumes: [minio_data:/data]
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      target: runtime
     environment:
       APP_ENV: docker
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ecommerce_agent:change-me-for-local-only@db:5432/ecommerce_agent}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      <<: *common-environment
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
-      AUTH_MODE: ${AUTH_MODE:-password}
-      JWT_SECRET: ${JWT_SECRET:-local-development-session-secret-change-before-production}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-Admin@123456}
       TASK_EXECUTION_MODE: worker
     ports: ["8000:8000"]
@@ -42,16 +71,33 @@ services:
     ports: ["5173:5173"]
     depends_on: [api]
   agent-worker:
-    build: ./backend
+    build:
+      context: ./backend
+      target: runtime
     command: python -m app.worker
     environment:
+      <<: *common-environment
       APP_ENV: docker
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ecommerce_agent:change-me-for-local-only@db:5432/ecommerce_agent}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-      AUTH_MODE: ${AUTH_MODE:-password}
-      JWT_SECRET: ${JWT_SECRET:-local-development-session-secret-change-before-production}
       TASK_EXECUTION_MODE: worker
     depends_on: [db, redis]
+  market-intelligence-e2e:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      target: test
+    command: >-
+      pytest tests/test_market_intelligence_full_chain_postgres.py -v -s
+    environment:
+      <<: *common-environment
+      APP_ENV: test
+      AUTH_MODE: jwt
+      AUTO_CREATE_SCHEMA: "false"
+      TASK_EXECUTION_MODE: worker
+      MARKET_INTELLIGENCE_E2E_DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ecommerce_agent:change-me-for-local-only@db:5432/ecommerce_agent}
+    volumes: [./backend:/app]
+    depends_on:
+      db:
+        condition: service_healthy
   scheduler:
     build: ./backend
     command: python -m app.scheduler

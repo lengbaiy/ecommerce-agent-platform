@@ -5,7 +5,7 @@ from langgraph.graph import END, START, StateGraph
 from app.agents.specialists import build_specialists
 from app.agents.state import AgentState
 from app.agents.supervisor import SupervisorAgent
-from app.domain import AgentResult, AgentTask
+from app.domain import AgentResult, AgentTask, TaskEvent, TaskEventType, create_task_event
 
 
 class GraphContext(TypedDict):
@@ -13,7 +13,7 @@ class GraphContext(TypedDict):
     agent_state: AgentState
     selected_agent: str
     result: AgentResult | None
-    events: list[str]
+    events: list[TaskEvent]
 
 
 class EcommerceOperationsGraph:
@@ -66,7 +66,14 @@ class EcommerceOperationsGraph:
         context["selected_agent"] = selected
         context["agent_state"].task_plan = plan
         context["agent_state"].current_step = selected
-        context["events"].append(f"supervisor:routed_to:{selected}")
+        context["events"].append(
+            create_task_event(
+                context["task"],
+                TaskEventType.NODE_COMPLETED,
+                f"Supervisor routed task to {selected}.",
+                step="supervisor",
+            )
+        )
         return context
 
     def _specialist_node(self, name: str):
@@ -77,7 +84,14 @@ class EcommerceOperationsGraph:
             context["agent_state"].evidence_refs.extend(
                 item.model_dump() for item in result.evidence_refs
             )
-            context["events"].append(f"agent:{name}:result_generated")
+            context["events"].append(
+                create_task_event(
+                    context["task"],
+                    TaskEventType.NODE_COMPLETED,
+                    f"Agent {name} generated a result.",
+                    step=name,
+                )
+            )
             return context
 
         return run_specialist
@@ -87,10 +101,24 @@ class EcommerceOperationsGraph:
         if result is None:
             raise ValueError("specialist agent did not return a result")
         context["agent_state"].current_step = "judge"
-        context["events"].append("judge:evidence_checked")
+        context["events"].append(
+            create_task_event(
+                context["task"],
+                TaskEventType.NODE_COMPLETED,
+                "Evidence check completed.",
+                step="judge",
+            )
+        )
         if result.requires_approval:
             context["agent_state"].approval_status = "WAITING_APPROVAL"
-            context["events"].append("judge:approval_required")
+            context["events"].append(
+                create_task_event(
+                    context["task"],
+                    TaskEventType.TASK_WAITING_APPROVAL,
+                    "Task requires approval.",
+                    step="judge",
+                )
+            )
         else:
             context["agent_state"].final_result = result.model_dump(mode="json")
         return context

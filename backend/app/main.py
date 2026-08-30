@@ -10,21 +10,30 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import api_v1_router
 from app.core import settings
-from app.db import database_ready, init_database
+from app.db import database_ready
 from app.services.auth_service import AuthService
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        return json.dumps(
-            {
-                "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
-                "level": record.levelname,
-                "logger": record.name,
-                "message": record.getMessage(),
-            },
-            ensure_ascii=False,
-        )
+        payload = {
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info is not None:
+            exception_type, exception, _ = record.exc_info
+            payload.update(
+                {
+                    "exception_type": exception_type.__name__,
+                    "exception": str(exception),
+                    "traceback": self.formatException(record.exc_info),
+                }
+            )
+        if record.stack_info:
+            payload["stacktrace"] = self.formatStack(record.stack_info)
+        return json.dumps(payload, ensure_ascii=False)
 
 
 def configure_logging() -> None:
@@ -39,8 +48,6 @@ def configure_logging() -> None:
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     settings.validate()
     configure_logging()
-    if settings.auto_create_schema and settings.environment.lower() not in {"production", "prod"}:
-        init_database()
     if settings.auth_mode == "password":
         AuthService().ensure_bootstrap_admin()
     yield
@@ -57,6 +64,7 @@ app = FastAPI(
         {"name": "经营总览", "description": "经营指标、预警和审批概览。"},
         {"name": "Agent 任务", "description": "任务创建、状态、事件和取消。"},
         {"name": "审批", "description": "高风险写操作的人工审批。"},
+        {"name": "市场宏观指标", "description": "宏观指标上传、系统审核和批次查询。"},
     ],
     lifespan=lifespan,
 )

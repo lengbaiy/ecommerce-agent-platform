@@ -8,6 +8,7 @@
 **/.ruff_cache/
 work/
 tmp/
+backend/data/uploads/
 *.db
 .coverage
 **/.coverage

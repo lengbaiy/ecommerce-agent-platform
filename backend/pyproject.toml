@@ -13,9 +13,14 @@ dependencies = [
   "sqlalchemy>=2.0",
   "psycopg[binary]>=3.2",
   "langgraph>=0.2",
+  "openai>=1.52",
   "PyJWT[crypto]>=2.10",
   "pwdlib[argon2]>=0.2",
   "alembic>=1.14",
+  "huggingface-hub",
+  "datasets",
+  "openpyxl>=3.1",
+  "python-multipart>=0.0.20",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +39,11 @@ include = ["app*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+  "integration: tests that cross persistence or adapter boundaries",
+  "llm: tests that call a configured external LLM provider",
+  "e2e_postgres: isolated full-chain tests against a real PostgreSQL server",
+]
 
 [tool.ruff]
 line-length = 100

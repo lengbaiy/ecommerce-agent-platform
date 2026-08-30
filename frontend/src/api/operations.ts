@@ -54,16 +54,3 @@ export function fetchOverview(shopId = "amazon-us-demo") {
 export function fetchTasks() {
   return request<TaskList>("/agent/tasks?limit=20");
 }
-
-export function createMarketTask(shopId: string) {
-  return request<AgentTask>("/agent/tasks", {
-    method: "POST",
-    body: JSON.stringify({
-      user_query: "分析便携咖啡机在 US 市场是否值得进入，目标毛利不低于 30%",
-      intent: "market_entry",
-      business_context: { shop_id: shopId, market: "US", category: "coffee_machine" },
-      constraints: { minimum_margin: 0.3 },
-      priority: "HIGH",
-    }),
-  });
-}

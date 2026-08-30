@@ -4,7 +4,6 @@ from time import sleep
 
 from app.api.dependencies import get_task_service
 from app.core import settings
-from app.db import init_database
 from app.main import configure_logging
 
 logger = logging.getLogger("app.worker")
@@ -13,7 +12,6 @@ logger = logging.getLogger("app.worker")
 def main() -> None:
     settings.validate()
     configure_logging()
-    init_database()
     service = get_task_service()
     poll_interval = float(getenv("WORKER_POLL_INTERVAL_SECONDS", "1"))
     logger.info("agent worker started environment=%s", settings.environment)

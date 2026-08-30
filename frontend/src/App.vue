@@ -5,12 +5,21 @@ import { CChart } from "@coreui/vue-chartjs";
 import { useOperationsWorkspace } from "./composables/useOperationsWorkspace";
 import { navigationItems } from "./config/navigation";
 import ModuleWorkspace from "./modules/ModuleWorkspace.vue";
+import MarketOpportunityModule from "./modules/market-intelligence/views/MarketOpportunityModule.vue";
 import { logout } from "./auth/api";
 import LoginPage from "./auth/LoginPage.vue";
 import PermissionWorkspace from "./auth/PermissionWorkspace.vue";
 import { currentSession, hasPermission, setSession } from "./auth/session";
 
-const activeModuleId = ref("dashboard");
+const initialModuleId = new URLSearchParams(window.location.search).get("module");
+const initialTaskId = new URLSearchParams(window.location.search).get("task_id");
+const activeModuleId = ref(
+  initialTaskId
+    ? "market"
+    : navigationItems.some((item) => item.id === initialModuleId)
+      ? initialModuleId!
+      : "dashboard",
+);
 const selectedShopId = ref("amazon-us-demo");
 const sidebarVisible = ref(true);
 const currentModule = computed(
@@ -18,6 +27,7 @@ const currentModule = computed(
 );
 const isDashboard = computed(() => activeModuleId.value === "dashboard");
 const isPermissions = computed(() => activeModuleId.value === "permissions");
+const isMarketOpportunity = computed(() => activeModuleId.value === "market");
 const visibleNavigationItems = computed(() =>
   navigationItems.filter((item) => item.id !== "permissions" || hasPermission("user:read")),
 );
@@ -26,15 +36,18 @@ const {
   tasks,
   pendingTasks,
   loading,
-  creating,
   errorMessage,
   dataCutoff,
   loadWorkspace,
-  createTask,
 } = useOperationsWorkspace();
 
 watch(selectedShopId, (shopId) => {
   if (currentSession.value) void loadWorkspace(shopId);
+});
+watch(activeModuleId, (moduleId) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("module", moduleId);
+  window.history.replaceState({}, "", url);
 });
 watch(
   currentSession,
@@ -206,6 +219,16 @@ function statusColor(value: string) {
   return "info";
 }
 
+function selectModule(moduleId: string) {
+  if (moduleId === "market") {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("market_view");
+    url.searchParams.delete("task_id");
+    window.history.replaceState({}, "", url);
+  }
+  activeModuleId.value = moduleId;
+}
+
 async function signOut() {
   await logout();
   setSession(null);
@@ -248,7 +271,7 @@ async function signOut() {
           <button
             class="nav-link"
             :class="{ active: activeModuleId === item.id }"
-            @click="activeModuleId = item.id"
+            @click="selectModule(item.id)"
           >
             <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
             <CBadge
@@ -268,7 +291,7 @@ async function signOut() {
           <button
             class="nav-link"
             :class="{ active: activeModuleId === item.id }"
-            @click="activeModuleId = item.id"
+            @click="selectModule(item.id)"
           >
             <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
           </button>
@@ -281,7 +304,7 @@ async function signOut() {
           <button
             class="nav-link"
             :class="{ active: activeModuleId === item.id }"
-            @click="activeModuleId = item.id"
+            @click="selectModule(item.id)"
           >
             <CIcon custom-class-name="nav-icon" :icon="navIcons[item.id]" />{{ item.label }}
           </button>
@@ -353,10 +376,8 @@ async function signOut() {
                   @click="loadWorkspace(selectedShopId)"
                 >
                   同步数据 </CButton
-                ><CButton color="primary" :disabled="creating" @click="createTask(selectedShopId)">
-                  <CIcon icon="cil-lightbulb" class="me-2" />{{
-                    creating ? "创建中…" : "市场进入评估"
-                  }}
+                ><CButton color="primary" @click="selectModule('market')">
+                  <CIcon icon="cil-lightbulb" class="me-2" />市场进入评估
                 </CButton>
               </CCol>
             </CRow>
@@ -561,6 +582,7 @@ async function signOut() {
             </CRow>
           </template>
 
+          <MarketOpportunityModule v-else-if="isMarketOpportunity" />
           <PermissionWorkspace v-else-if="isPermissions" />
           <ModuleWorkspace v-else :module="currentModule" />
         </CContainer>

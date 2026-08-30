@@ -9,8 +9,19 @@ from pydantic import BaseModel, Field
 from app.core.config import Settings, settings
 
 ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
-    "operator": frozenset({"dashboard:read", "task:read", "task:create", "task:cancel"}),
-    "approver": frozenset({"dashboard:read", "task:read", "approval:decide"}),
+    "operator": frozenset(
+        {
+            "dashboard:read",
+            "task:read",
+            "task:create",
+            "task:cancel",
+            "market_metric:read",
+            "market_metric:write",
+        }
+    ),
+    "approver": frozenset(
+        {"dashboard:read", "task:read", "approval:decide", "market_metric:read"}
+    ),
     "admin": frozenset(
         {
             "dashboard:read",
@@ -20,6 +31,8 @@ ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
             "approval:decide",
             "user:read",
             "user:write",
+            "market_metric:read",
+            "market_metric:write",
         }
     ),
 }
@@ -126,3 +139,11 @@ DashboardDependency = Annotated[Principal, Depends(require_permission("dashboard
 ApproverDependency = Annotated[Principal, Depends(require_permission("approval:decide"))]
 UserReadDependency = Annotated[Principal, Depends(require_permission("user:read"))]
 UserWriteDependency = Annotated[Principal, Depends(require_permission("user:write"))]
+MarketMetricReadDependency = Annotated[
+    Principal,
+    Depends(require_permission("market_metric:read")),
+]
+MarketMetricWriteDependency = Annotated[
+    Principal,
+    Depends(require_permission("market_metric:write")),
+]

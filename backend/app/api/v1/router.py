@@ -5,6 +5,7 @@ from app.api.v1.approvals import router as approvals_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.knowledge import router as knowledge_router
+from app.api.v1.market_metrics import router as market_metrics_router
 from app.api.v1.products import router as products_router
 from app.api.v1.tasks import router as tasks_router
 
@@ -16,3 +17,4 @@ api_v1_router.include_router(dashboard_router)
 api_v1_router.include_router(products_router)
 api_v1_router.include_router(analytics_router)
 api_v1_router.include_router(knowledge_router)
+api_v1_router.include_router(market_metrics_router)

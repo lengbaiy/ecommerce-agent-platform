@@ -1,3 +1,9 @@
+from app.repositories.market_metric_repository import (
+    MarketMetricConflictError,
+    MarketMetricNotFoundError,
+    MarketMetricRepository,
+    SQLAlchemyMarketMetricRepository,
+)
 from app.repositories.task_repository import (
     ConcurrentTaskUpdateError,
     InMemoryTaskRepository,
@@ -8,6 +14,10 @@ from app.repositories.task_repository import (
 __all__ = [
     "ConcurrentTaskUpdateError",
     "InMemoryTaskRepository",
+    "MarketMetricConflictError",
+    "MarketMetricNotFoundError",
+    "MarketMetricRepository",
     "SQLAlchemyTaskRepository",
+    "SQLAlchemyMarketMetricRepository",
     "TaskRepository",
 ]

@@ -30,29 +30,6 @@ const moduleContent: Record<
     ],
     steps: ["创建", "规划", "执行", "审批 / 完成"],
   },
-  market: {
-    action: "评估市场机会",
-    prompt: "分析便携咖啡机在 US 市场是否值得进入，目标毛利不低于 30%。",
-    metrics: [
-      { label: "监测类目", value: "18", color: "primary" },
-      { label: "竞品样本", value: "1,286", color: "info" },
-      { label: "机会评分", value: "78", color: "success" },
-    ],
-    capabilities: [
-      {
-        title: "类目扫描",
-        description: "规模、增长、价格带和集中度形成市场快照。",
-        badge: "Market",
-      },
-      {
-        title: "竞品拆解",
-        description: "对比价格、卖点、评价、排名和商品事实。",
-        badge: "Competitor",
-      },
-      { title: "利润约束", description: "用确定性计算器验证毛利与进入门槛。", badge: "Profit" },
-    ],
-    steps: ["市场扫描", "竞品与评论", "利润测算", "机会评审"],
-  },
   strategy: {
     action: "生成商品策略",
     prompt: "选择已完成的市场报告，生成用户定位、价格带、卖点与差异化方案。",

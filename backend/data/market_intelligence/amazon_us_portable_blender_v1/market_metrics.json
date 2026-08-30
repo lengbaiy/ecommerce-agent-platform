@@ -1,0 +1,117 @@
+[
+  {
+    "metric_code": "market_size",
+    "value": null,
+    "unit": "USD",
+    "status": "unavailable",
+    "methodology": "Amazon Reviews 2023 does not provide market-wide market size data.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "gmv",
+    "value": null,
+    "unit": "USD",
+    "status": "unavailable",
+    "methodology": "Amazon Reviews 2023 does not provide market-wide GMV data.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "growth",
+    "value": null,
+    "unit": "percent",
+    "status": "unavailable",
+    "methodology": "Amazon Reviews 2023 does not provide market-wide sales growth data.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_product_count",
+    "value": 30,
+    "unit": "count",
+    "status": "available",
+    "methodology": "Number of products in the filtered Amazon Reviews 2023 product sample.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_price_distribution",
+    "value": {
+      "observed_count": 15,
+      "total_product_count": 30,
+      "coverage_ratio": "0.5000",
+      "min": "20.99",
+      "max": "99.87",
+      "mean": "39.82",
+      "median": "37.99"
+    },
+    "unit": "USD",
+    "status": "partial",
+    "methodology": "Price distribution calculated from non-missing price values in the filtered Amazon product sample. It is a sample statistic, not a market-wide price distribution.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_rating_distribution",
+    "value": {
+      "observed_count": 30,
+      "total_product_count": 30,
+      "coverage_ratio": "1.0000",
+      "min": "2.90",
+      "max": "5.00",
+      "mean": "3.84",
+      "median": "3.80"
+    },
+    "unit": "rating",
+    "status": "available",
+    "methodology": "Rating distribution calculated from non-missing average_rating values in the filtered Amazon product sample.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_review_count_distribution",
+    "value": {
+      "observed_count": 30,
+      "total_product_count": 30,
+      "coverage_ratio": "1.0000",
+      "min": 1,
+      "max": 27730,
+      "mean": "1263.53",
+      "median": "56.00"
+    },
+    "unit": "count",
+    "status": "available",
+    "methodology": "Distribution of rating_number values in the filtered Amazon product sample. Rating/review counts are sample metadata and are not sales volume.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_review_activity",
+    "value": {
+      "total_review_count": 434,
+      "dated_review_count": 434,
+      "timestamp_coverage_ratio": "1.0000",
+      "start_date": "2014-11-15",
+      "end_date": "2023-05-20",
+      "reviews_by_year": {
+        "2014": 1,
+        "2015": 6,
+        "2016": 2,
+        "2017": 13,
+        "2018": 15,
+        "2019": 18,
+        "2020": 56,
+        "2021": 69,
+        "2022": 173,
+        "2023": 81
+      }
+    },
+    "unit": "count",
+    "status": "available",
+    "methodology": "Review activity calculated from timestamps in the filtered review sample. It describes review activity only and must not be interpreted as market sales growth.",
+    "source_timestamp": null
+  },
+  {
+    "metric_code": "sample_brand_concentration",
+    "value": null,
+    "unit": "ratio",
+    "status": "unavailable",
+    "reason_code": "BRAND_DATA_UNAVAILABLE",
+    "methodology": "Brand concentration calculated only from products with a non-empty brand field; store/shop_name is never used as a brand fallback. Shares use the branded subset as denominator. The metric is partial when brand coverage is below 80%.",
+    "source_timestamp": null
+  }
+]

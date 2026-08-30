@@ -1,0 +1,27 @@
+{
+  "dataset_id": "amazon_us_portable_coffee_v1",
+  "dataset_version": "1.0.0",
+  "schema_version": "1.0",
+  "platform": "amazon",
+  "market": "US",
+  "category": "portable coffee",
+  "keyword": "portable coffee maker",
+  "aliases": [
+    "便携咖啡机",
+    "便携式咖啡机",
+    "旅行咖啡机",
+    "portable coffee maker",
+    "travel coffee maker"
+  ],
+  "source_type": "anonymized_snapshot",
+  "source_description": "McAuley-Lab/Amazon-Reviews-2023",
+  "generated_at": "2026-08-16T09:03:57.2598968Z",
+  "source_timestamp": "2023-09-30T00:00:00Z",
+  "license_or_authorization": "Development and demonstration use only; source dataset terms apply; production authorization is not established.",
+  "checksums": {
+    "products.jsonl": "3a961f3fe0aa5367022602046109fa288eaed2c8da777cbabdfdd67511a166cf",
+    "reviews.jsonl": "e84801ca6ae442b4378d8477c217732033ccf8a1bb9125607afd4c7abee57b9c",
+    "market_metrics.json": "4c94a851ee8de5f8318b1960f9d9fa3303c06ac75309159158df6f132e69f4f9",
+    "profit_inputs.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

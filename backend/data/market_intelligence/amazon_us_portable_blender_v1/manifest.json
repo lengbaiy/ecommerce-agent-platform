@@ -1,0 +1,24 @@
+{
+  "dataset_id": "amazon_us_portable_blender_v1",
+  "dataset_version": "1.0.0",
+  "schema_version": "1.0",
+  "platform": "amazon",
+  "market": "US",
+  "category": "portable blender",
+  "keyword": "portable blender",
+  "aliases": [
+    "便携搅拌机",
+    "便携式搅拌机"
+  ],
+  "source_type": "anonymized_snapshot",
+  "source_description": "McAuley-Lab/Amazon-Reviews-2023",
+  "generated_at": "2026-08-26T03:15:47.302677Z",
+  "source_timestamp": "2023-05-20T04:01:52.260000Z",
+  "license_or_authorization": "Development and demonstration use only; source dataset terms apply; production authorization is not established.",
+  "checksums": {
+    "products.jsonl": "578e385d643fb64884aca2ed1183f59b34a7c7a00c0889b86a9ff976b01124db",
+    "reviews.jsonl": "78584f1c1f4823307724e20e67295e1866435ffcf8d5e2dc00c8e90af81fa30f",
+    "market_metrics.json": "8fc10cec9535f281e601fabd456378a2f359663b05d7ab8ac17d1004a99efcce",
+    "profit_inputs.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

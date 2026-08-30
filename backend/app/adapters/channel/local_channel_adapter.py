@@ -2,7 +2,7 @@ from app.domain import AgentResult
 
 
 class LocalCommerceAdapter:
-    """不连接真实电商平台的开发期幂等写入模拟器。"""
+    """不连接真实电商平台的开发期商品方案幂等写入模拟器。"""
 
     def __init__(self) -> None:
         self._executed: set[str] = set()
